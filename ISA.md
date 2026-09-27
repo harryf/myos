@@ -3,11 +3,11 @@ project: myos
 task: Build myos phases 1 to 5 (repo, launcher, hooks, doctrine, skills, memory migration) per the approved plan
 slug: 20260927-220000_myos-build
 effort: E4
-phase: verify
+phase: complete
 progress: 159/160
 mode: algorithm
 started: 2026-09-27T20:05:00+02:00
-updated: 2026-09-27T22:05:00+02:00
+updated: 2026-09-28T00:40:00+02:00
 ---
 
 # myos ISA
@@ -299,6 +299,9 @@ Process and documentation:
 
 - conjectured: the pmai source repo is not on this machine, so the installed `~/.pmai` copy would be the porting source. refuted_by: the pmai audit agent found `~/Code/gigs/pmai/pmai` with 51 release tags. learned: a depth-limited `fd` over `~/Code` misses repos nested under a client directory; search for the repo marker (`install.sh` plus `payload/`) at unlimited depth before concluding absence. criterion_now: ISC-32 states the repo path and the plan uses the repo as the source.
 - conjectured: the LifeOS Algorithm would be a longer version of v6.3.0 with more tiers and gates to strip. refuted_by: v8.20.2 is 100 lines, has no tiers, modes, phases or voice text, and pmai's v8.4.0 is the same lineage. learned: the lean direction Harry asked for is the upstream direction; the plan adopts rather than invents. criterion_now: ISC-9 names v8.20.2 and the changelog entries 7.0.0, 8.0.0 and 8.1.0 as the retirements.
+- conjectured: a one time em dash strip over the copied pmai tree is safe because the character only appears in comments and prose. refuted_by: the baseline test run (47 failures) showed StyleCheck.ts detects the character with a literal in its own regexes and its fixtures, so the strip disarmed the em dash gate itself. learned: code that enforces a rule about a character must spell that character as an escape (backslash u2014), and any bulk rewrite needs a green test run before anything is built on top of it. criterion_now: ISC-61 (no U+2014 in any tracked file) holds with the checker and its tests written as escapes; the pre commit hook and CI grep enforce it.
+- conjectured: writing the escape sequence backslash u2014 in prose through the Write and Edit tools leaves the six characters on disk. refuted_by: three files came back with the real em dash (DEVELOPMENT.md, ISA.md, the pre commit hook), and the skills builder hit the same once. learned: the editing tools render the JavaScript escape; prose must say "U+2014" or "backslash u2014", and only code files may carry the escape. criterion_now: ISC-61 is checked with `rg` over the whole tree after every documentation edit, not only in CI.
+- conjectured: four builders on disjoint paths need no further coordination once the shared libs and the corpus modules exist. refuted_by: the tools builder wrote Doctor state into the real `~/.myos` from a bare `--help`, and the hooks builder stalled once on a long tool call. learned: "sandbox only" has to be a property of the tools (no writes on read only commands, config dir from the environment) and not only a rule in a brief; stalled builders resume cleanly from disk state when the brief names the order of the remaining work. criterion_now: ISC-60 and ISC-139 stay probes over the real source trees, and the installer accepts a pre existing user owned tree so a stray state file can never block an install.
 
 ## Verification
 
@@ -353,14 +356,14 @@ Run 2 (2026-09-28, build):
 - ISC-47: `./install.sh --dry-run` printed "FRESH INSTALL", "546 new file(s)", "untouched"; `ls ~/.myos` unchanged after.
 - ISC-48: `jq '.files | length' ~/.myos/.install-manifest.json` = 546.
 - ISC-49: installer log "launcher linked: /Users/harry/.local/bin/myos"; readlink confirms.
-- ISC-50: test/tools/install.test.ts (sandbox HOME): second run reports no release changes and settings.json is byte identical; CI step "Install idempotency" repeats it on a clean runner.
+- ISC-50: test/tools/install.test.ts (sandbox HOME): second run reports no release changes and settings.json is byte identical; the real upgrade run after the review fixes ("mode: UPGRADE: 0.1.0 reinstalled", 20 files updated, 525 up to date) left `~/.myos/settings.json` byte identical (`cmp`); CI step "Install idempotency" repeats it on a clean runner.
 - ISC-51: `rg -n from-pai install.sh` lines 21, 45, 47; the real run printed the `[from-pai]` block.
 - ISC-52: `rg -il pmai install.sh bin Tools payload .github` = none. One match remains in test/doctrine/Doctrine.test.ts: the regex that asserts the doctrine carries no pmai string (accepted).
 - ISC-53: Tools/ContrabandCheck.ts BANNED has the eight signatures plus ten more; `bun Tools/ContrabandCheck.ts` = "shippable surface clean"; test/gates 137 pass.
 - ISC-54: ci.yml steps: em dash grep over `git ls-files`, ContrabandCheck, PermissionRulesCheck, TestCoverageCheck, `bun test`, StyleCheck prose/docs/dashes, BudgetCheck, shell syntax, unshipped tool refs, install smoke, idempotency, hook import sweep, upgrade path, upgrade guard, statusline.
 - ISC-55: release.yml Gate 2 "Tag $GITHUB_REF_NAME does not match VERSION file".
 - ISC-56: `rg 'harryf|gigs' Tools/Release.ts .github/workflows` = none; Release.ts pushes to `origin`, which is harryf/myos; the pmai remote name never appears.
-- ISC-57: `bun test` = 759 pass, 0 fail, 55 files (before the review fixes; rerun recorded below).
+- ISC-57: `bun test` = 766 pass, 0 fail, 55 files, 2,688 expect calls (after the review fixes); test/gates/ReleaseCheck.test.ts 21 pass after the memory loop check was removed.
 - ISC-58: `bun Tools/TestCoverageCheck.ts` = "53 scripts, 53 rows in parity".
 - ISC-59: .gitignore rows for node_modules, .test-tmp, settings.json, .env, bun.lock, MEMORY and the user owned USER files (10 matching lines).
 - ISC-60: `find ~/.claude-personal -newer <run marker>` excluding OBSERVABILITY, projects, logs, STATE: only Claude Code's own runtime files (backups/.claude.json.backup.*, sessions/, cache/model-catalog, file-history, .last-update-result.json, PAI/.quote-cache written by pai hooks). `find ~/.pmai ~/Code/gigs/pmai/pmai -newer <marker>` = none.
@@ -443,9 +446,9 @@ Run 2 (2026-09-28, build):
 - ISC-152: Decisions entry of 2026-09-27 22:05 (phase 0).
 - ISC-153: advisor called at 22:20 (approach, eight points, all adopted) and at 00:10 (closing, eight points; dispositions in Decisions).
 - ISC-154: an independent review agent returned 15 findings on the hooks layer (Decisions, 00:20); 13 sent back to the hooks builder for fixing, 2 declined with reasons.
-- ISC-155: CHANGELOG.md `## 0.1.0`; `bun Tools/ReleaseCheck.ts --health` result recorded below.
+- ISC-155: CHANGELOG.md `## 0.1.0`; `bun Tools/ReleaseCheck.ts --health` against the install: install-present, hooks-registered (21 files), hooks-build (20 TS hooks), algorithm-parity, agents-present, statusline pass; the one fail is login-state (no OAuth account in `~/.myos/.claude.json` until Harry logs in). The pmai memory loop check and memory surface probe were removed from ReleaseCheck; the dispatch probe now targets Max.
 - ISC-156: README.md (install, upgrade, removal, contents table), MIGRATION.md (status BUILT, the real `--from-pai` interface and counts, cutover decided, residue), DEVELOPMENT.md (conventions, tests, releases, installer semantics, adding a hook, style gate, traps).
-- ISC-157: first commit 1ad552e pushed to origin/main; CI run 36354325827 failed on one StyleCheck error ("marks a" in IsaFormat.md) and release.yml failed to parse (step names with a colon after the em dash strip); both fixed in the second commit; the third run's status is recorded below.
+- ISC-157: first commit 1ad552e pushed to origin/main; CI run 36354325827 failed on one StyleCheck error ("marks a" in IsaFormat.md) and release.yml failed to parse (step names with a colon after the em dash strip); both fixed in the second commit (CI run 36354494824: success); the third commit with the hook review fixes passed too (run 36355259980: success).
 - ISC-158: `find payload/MYOS/USER -type f` = CONVENTIONS.md, CONFIG/trial.json.example, PROJECTS.md; install log "created ... (only when absent)"; the CI idempotency step appends a marker to CONVENTIONS.md and checks it survives.
 - ISC-159: MYOS_CONFIG.toml lines: name = "Harry", timezone = "Europe/Zurich", `[gates] blocking = false`.
 - ISC-160: trial.json: started 2026-09-28, gate_review_due 2026-10-12, doctrine_review_due 2026-10-28, both done flags false.
