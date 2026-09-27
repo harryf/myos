@@ -33,12 +33,12 @@ describe("stream-json parsing", () => {
     JSON.stringify({ type: "system", subtype: "hook_response", hook_name: "SessionStart:startup", output: "<myos-memory-delta>x</myos-memory-delta>" }),
     JSON.stringify({
       type: "assistant",
-      message: { content: [{ type: "text", text: "on it" }, { type: "tool_use", name: "Agent", input: { subagent_type: "ClaudeResearcher", prompt: "reply RESEARCHER-OK" } }] },
+      message: { content: [{ type: "text", text: "on it" }, { type: "tool_use", name: "Agent", input: { subagent_type: "Max", prompt: "reply MAX-OK" } }] },
     }),
     '{"type":"assistant","message":{"content":[{"type":"tool_use","name":"Read","input":{"file_path":"/x/v8.4.0.md"}}]}}',
     "{broken json",
     JSON.stringify({ type: "result", result: "The agent is running in the background." }),
-    JSON.stringify({ type: "result", result: "RESEARCHER-OK", total_cost_usd: 0.01 }),
+    JSON.stringify({ type: "result", result: "MAX-OK", total_cost_usd: 0.01 }),
   ].join("\n");
 
   test("noise and broken lines are skipped, events survive", () => {
@@ -48,14 +48,14 @@ describe("stream-json parsing", () => {
   test("tool uses come back with name and stringified input", () => {
     const uses = toolUses(parseStreamJson(transcript));
     expect(uses.map((u) => u.name)).toEqual(["Agent", "Read"]);
-    expect(uses[0].input).toContain("ClaudeResearcher");
+    expect(uses[0].input).toContain("Max");
     expect(uses[1].input).toContain("v8.4.0.md");
   });
 
   test("resultText takes the LAST result: a background agent dispatch emits an interim one first", () => {
     // Pinned from a real probe (2026-07-29): grading the first result event
     // reads "the agent is running…" and fails a dispatch that succeeded.
-    expect(resultText(parseStreamJson(transcript))).toBe("RESEARCHER-OK");
+    expect(resultText(parseStreamJson(transcript))).toBe("MAX-OK");
   });
 
   test("resultText is empty when the run died before any result", () => {
@@ -140,10 +140,10 @@ describe("CLI --list", () => {
   test("names every health check and probe without touching an install", async () => {
     const result = await run([bunExe(), TOOL, "--list"]);
     expect(result.exitCode).toBe(0);
-    for (const id of ["install-present", "login-state", "hooks-build", "memory-loop", "algorithm-parity", "statusline"]) {
+    for (const id of ["install-present", "login-state", "hooks-build", "algorithm-parity", "statusline"]) {
       expect(result.stdout).toContain(id);
     }
-    for (const id of ["boot", "memory-surface", "skill-routing", "agent-dispatch", "algorithm-load", "model-routing"]) {
+    for (const id of ["boot", "skill-routing", "agent-dispatch", "algorithm-load", "model-routing"]) {
       expect(result.stdout).toContain(id);
     }
   });
@@ -157,7 +157,6 @@ describe("CLI --health against a healthy fixture install", () => {
     expect(result.stdout).toContain("✅ login-state");
     expect(result.stdout).toContain("✅ hooks-registered");
     expect(result.stdout).toContain("✅ hooks-build");
-    expect(result.stdout).toContain("✅ memory-loop");
     expect(result.stdout).toContain("✅ algorithm-parity");
     expect(result.stdout).toContain("✅ agents-present");
     expect(result.stdout).toContain("✅ statusline");
@@ -174,22 +173,6 @@ describe("CLI --health against a healthy fixture install", () => {
 });
 
 describe("CLI --health against broken fixture installs", () => {
-  test("a dead memory loop is named with its producer gap, exit 1", async () => {
-    using home = healthyHome("releasecheck-deadmemory");
-    // Kill all three legs: no heartbeat, no freshness cache, no curation rows.
-    home.write(".myos/MYOS/MEMORY/OBSERVABILITY/memory-writes.jsonl", "");
-    const { rmSync } = await import("node:fs");
-    rmSync(home.join(".myos/MYOS/MEMORY/STATE/delta-surface-heartbeat"));
-    rmSync(home.join(".myos/MYOS/USER/CACHE/freshness.json"));
-
-    const result = await run([bunExe(), TOOL, "--health", "--home", home.path]);
-    expect(result.stdout).toContain("❌ memory-loop");
-    expect(result.stdout).toContain("MemoryDeltaSurface is not firing");
-    expect(result.stdout).toContain('"freshness: no data"');
-    expect(result.stdout).toContain('"no curation runs yet"');
-    expect(result.exitCode).toBe(1);
-  });
-
   test("a registered hook whose file is gone fails hooks-registered", async () => {
     using home = healthyHome("releasecheck-missinghook");
     home.write(".myos/settings.json", JSON.stringify({ hooks: { Stop: [{ hooks: [{ command: `bun '${home.join(".myos/hooks/Gone.hook.ts")}'` }] }] } }));

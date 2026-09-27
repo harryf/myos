@@ -40,7 +40,7 @@ import {
   statSync,
   writeFileSync,
 } from "node:fs";
-import { homedir } from "node:os";
+import { getMyosDir } from "./lib/paths";
 import { join } from "node:path";
 import { createHash } from "node:crypto";
 import {
@@ -54,13 +54,7 @@ import {
 const STDIN_CAP_BYTES = 2 * 1024 * 1024;
 const CACHE_MAX_BYTES = 10 * 1024 * 1024;
 
-const HOME = homedir();
-const MYOS_DIR = process.env.MYOS_DIR
-  ? process.env.MYOS_DIR.replace(/^~(?=\/|$)/, HOME).replace(
-      /^\$\{?HOME\}?(?=\/|$)/,
-      HOME,
-    )
-  : join(HOME, ".myos", "MYOS");
+const MYOS_DIR = getMyosDir();
 const STATE_DIR = join(MYOS_DIR, "MEMORY", "STATE");
 const OBS_DIR = join(MYOS_DIR, "MEMORY", "OBSERVABILITY");
 const CACHE_PATH = join(STATE_DIR, "permission-cache.json");

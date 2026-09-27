@@ -31,7 +31,8 @@ export function expandPath(path: string): string {
  * Priority:
  *   1. CLAUDE_PLUGIN_ROOT (plugin install) → <root>/MYOS
  *   2. MYOS_DIR env var (expanded)
- *   3. ~/.myos/MYOS  (live default)
+ *   3. <config dir>/MYOS, where the config dir is getClaudeDir()
+ *      (CLAUDE_CONFIG_DIR, else ~/.myos): the two roots never disagree
  *
  * The CLAUDE_PLUGIN_ROOT guard MUST precede the MYOS_DIR check: in a packed
  * plugin, the launcher exports MYOS_DIR equal to CLAUDE_PLUGIN_ROOT (the
@@ -51,7 +52,7 @@ export function getMyosDir(): string {
     return expandPath(envMyosDir);
   }
 
-  return join(homedir(), '.myos', 'MYOS');
+  return join(getClaudeDir(), 'MYOS');
 }
 
 /**
@@ -120,4 +121,16 @@ export function getSkillsDir(): string {
  */
 export function getMemoryDir(): string {
   return myosPath('MEMORY');
+}
+
+/**
+ * Where LastResponseCache writes and DriftReminder reads the previous answer:
+ * one file per session so concurrent sessions never read each other's; the
+ * unkeyed name only when the harness sent no session id.
+ */
+export function lastResponsePath(sessionId?: string): string {
+  const safe = (sessionId ?? '').replace(/[^A-Za-z0-9_-]/g, '');
+  return safe
+    ? myosPath('MEMORY', 'STATE', 'last-response', `${safe}.txt`)
+    : myosPath('MEMORY', 'STATE', 'last-response.txt');
 }

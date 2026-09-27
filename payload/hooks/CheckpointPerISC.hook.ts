@@ -24,13 +24,14 @@ import { readFileSync, existsSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { basename, dirname, join } from 'node:path';
 import { homedir } from 'node:os';
+import { getClaudeDir } from './lib/paths';
 import { parseFrontmatter, parseCriteriaList, ARTIFACT_FILENAME, LEGACY_ARTIFACT_FILENAME } from './lib/isa-utils';
 
-// Allowlist path: top of ~/.myos per spec. One absolute repo path per line;
+// Allowlist path: top of the config dir (~/.myos). One absolute repo path per line;
 // '#' comments and blank
 // lines are ignored. Tilde and $HOME prefixes are expanded as a quality-of-
-// life feature so users can write `~/Projects/foo` instead of the long form.
-const ALLOWLIST_PATH = join(homedir(), '.myos', 'checkpoint-repos.txt');
+// life feature so users can write `~/Code/foo` instead of the long form.
+const ALLOWLIST_PATH = join(getClaudeDir(), 'checkpoint-repos.txt');
 const GIT_TIMEOUT_MS = 5000;
 
 interface CheckpointState {

@@ -14,7 +14,7 @@
  *
  * Ported from LifeOS 7.40.4 VerificationGate 1.0.6 (transcript-evidence).
  */
-import { existsSync, readFileSync } from "node:fs";
+import { readTranscriptTail } from "./hook-io";
 
 export type EventKind =
   | "edit" // Edit/Write/MultiEdit/NotebookEdit
@@ -49,18 +49,10 @@ export interface TxEvent {
   command?: string;
 }
 
-const CAP_BYTES = 8 * 1024 * 1024;
 const CHROME_PREFIX = "mcp__claude-in-chrome__";
 
 function safeRead(path: string): string | null {
-  try {
-    if (!path || !existsSync(path)) return null;
-    const buf = readFileSync(path);
-    if (buf.length > CAP_BYTES) return buf.subarray(buf.length - CAP_BYTES).toString("utf-8");
-    return buf.toString("utf-8");
-  } catch {
-    return null;
-  }
+  return readTranscriptTail(path);
 }
 
 function eTLD1(host: string): string {

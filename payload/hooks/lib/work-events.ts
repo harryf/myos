@@ -333,6 +333,11 @@ export function foldToSnapshot(
     writeFileSync(tmp, JSON.stringify(next, null, 2));
     renameSync(tmp, snapPath);
     if (compact) {
+      // Known window, accepted: appendWorkEvents does not take this lock, so
+      // an event appended between replayOntoSnapshot above and this truncate
+      // is lost (it is in neither the snapshot nor the emptied log). The
+      // window is one fold on a log past 1 MB; the next ISA write re-emits
+      // the row's state, so work.json heals on the following sync.
       try {
         writeFileSync(logPath, '');
       } catch {}

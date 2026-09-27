@@ -43,6 +43,7 @@ import { writeFileSync, existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { getISOTimestamp } from './lib/time';
 import { readRegistry, writeRegistry, findArtifactPath, findActiveSessionByUUID } from './lib/isa-utils';
+import { getMyosDir } from './lib/paths';
 
 // Normalize env path vars that Claude Code injects without shell expansion
 for (const k of ["MYOS_DIR", "MYOS_CONFIG_DIR", "PROJECTS_DIR"]) {
@@ -51,7 +52,7 @@ for (const k of ["MYOS_DIR", "MYOS_CONFIG_DIR", "PROJECTS_DIR"]) {
 }
 
 
-const BASE_DIR = process.env.MYOS_DIR || join(process.env.HOME!, '.myos', 'MYOS');
+const BASE_DIR = getMyosDir();
 const MEMORY_DIR = join(BASE_DIR, 'MEMORY');
 const STATE_DIR = join(MEMORY_DIR, 'STATE');
 const WORK_DIR = join(MEMORY_DIR, 'WORK');

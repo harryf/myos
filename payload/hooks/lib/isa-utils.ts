@@ -17,7 +17,7 @@
 // module reads ISA.md first and falls back to PRD.md for sessions created
 // before the rename. New sessions always write ISA.md.
 
-import { writeFileSync, readdirSync, statSync, existsSync, mkdirSync, appendFileSync } from 'fs';
+import { writeFileSync, readdirSync, statSync, existsSync, mkdirSync, appendFileSync, openSync, readSync, closeSync } from 'fs';
 import { join, basename } from 'path';
 import { createHash } from 'crypto';
 import { myosPath } from './paths';
@@ -182,12 +182,6 @@ export interface ModeTransition {
   endedAt?: number;        // undefined = current
 }
 
-export interface RatingPulse {
-  value: number;           // 1-10
-  timestamp: number;       // epoch ms
-  message?: string;        // the short message that triggered it (optional, max 32 chars)
-}
-
 export interface AgentEntry {
   name: string;
   agentType: string;
@@ -216,7 +210,6 @@ export interface SessionEntry {
   currentMode?: 'minimal' | 'native' | 'algorithm';
   modeHistory?: ModeTransition[];
   // MINIMAL session tracking
-  ratings?: RatingPulse[];
   minimalCount?: number;
   // Enriched pipeline data
   capabilities?: string[];      // Skills/capabilities selected for this session
@@ -452,20 +445,30 @@ export function parseCapabilities(content: string): string[] {
 
 /**
  * Read subagent events for a given session UUID.
- * Uses tail approach: only reads last 200 lines to stay fast (<50ms).
+ * Reads only the file tail (256 KB) to stay fast.
  * Returns unique agents with name, type, status, task, phase.
  */
+/** The last maxBytes of a file as text (the first partial line is harmless: it fails JSON.parse). */
+function readTail(path: string, maxBytes: number): string {
+  const size = statSync(path).size;
+  const start = Math.max(0, size - maxBytes);
+  const fd = openSync(path, "r");
+  try {
+    const buf = Buffer.alloc(size - start);
+    const got = readSync(fd, buf, 0, buf.length, start);
+    return buf.subarray(0, got).toString("utf-8");
+  } finally {
+    closeSync(fd);
+  }
+}
+
 export function getSessionAgents(sessionUUID: string): AgentEntry[] {
   try {
     const eventsPath = myosPath('MEMORY', 'OBSERVABILITY', 'subagent-events.jsonl');
     if (!existsSync(eventsPath)) return [];
 
-    // Use execSync with tail for performance: only read last 200 lines
-    const { execSync } = require('child_process');
-    const raw: string = execSync(`tail -200 "${eventsPath}"`, {
-      encoding: 'utf-8',
-      timeout: 30, // 30ms hard cap
-    });
+    // Only the tail matters (recent agents); read at most the last 256 KB.
+    const raw = readTail(eventsPath, 256 * 1024);
 
     const agents: Map<string, AgentEntry> = new Map();
 
@@ -921,7 +924,6 @@ export function syncToWorkJson(fm: Record<string, string>, isaPath: string, cont
     phaseHistory,
     currentMode: newCurrentMode,
     modeHistory: existingModeHistory,
-    ratings: existing.ratings || [],
     minimalCount: existing.minimalCount || 0,
     capabilities: capabilities.length > 0 ? capabilities : undefined,
     agents: agents.length > 0 ? agents : undefined,
@@ -1237,64 +1239,6 @@ export function upsertSession(sessionUUID: string, sessionName: string, task: st
         ratings: [],
         minimalCount: 0,
       };
-    }
-
-    writeRegistry(registry);
-  } catch {}
-}
-
-/**
- * Add a RatingPulse to a session in work.json. Called by SatisfactionCapture.
- * If sessionUUID matches an existing session, appends to its ratings array and increments minimalCount.
- * If no session exists, writes to a __pulse_strip array for orphan ratings.
- * Designed to stay under 10ms: simple JSON read-modify-write.
- */
-export function addRatingPulse(sessionUUID: string, pulse: RatingPulse): void {
-  try {
-    const registry = readRegistry();
-
-    // Find existing session by UUID
-    let found = false;
-    for (const [, session] of Object.entries(registry.sessions) as [string, any][]) {
-      if (session.sessionUUID === sessionUUID) {
-        if (!session.ratings) session.ratings = [];
-        session.ratings.push(pulse);
-        session.minimalCount = (session.minimalCount || 0) + 1;
-        // Set currentMode to 'minimal' if first interaction was a rating
-        if (!session.currentMode) {
-          session.currentMode = 'minimal';
-          session.modeHistory = [{ mode: 'minimal' as const, startedAt: Date.now() }];
-        }
-        found = true;
-        break;
-      }
-    }
-
-    if (!found) {
-      // Orphan rating: store in __pulse_strip
-      if (!registry.sessions['__pulse_strip']) {
-        registry.sessions['__pulse_strip'] = {
-          task: '__pulse_strip',
-          sessionName: '__pulse_strip',
-          sessionUUID: '__pulse_strip',
-          phase: 'minimal',
-          progress: '0/0',
-          effort: '',
-          mode: 'minimal',
-          started: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          currentMode: 'minimal' as const,
-          ratings: [],
-          minimalCount: 0,
-        };
-      }
-      const strip = registry.sessions['__pulse_strip'];
-      if (!strip.ratings) strip.ratings = [];
-      strip.ratings.push(pulse);
-      strip.minimalCount = (strip.minimalCount || 0) + 1;
-      strip.updatedAt = new Date().toISOString();
-      // Cap orphan ratings to prevent unbounded growth (keep last 50)
-      if (strip.ratings.length > 50) strip.ratings = strip.ratings.slice(-50);
     }
 
     writeRegistry(registry);

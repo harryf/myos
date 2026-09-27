@@ -363,54 +363,6 @@ export const HEALTH_CHECKS: HealthCheck[] = [
     },
   },
   {
-    id: "memory-loop",
-    title: "The autonomic memory loop is alive",
-    async run(ctx) {
-      const evidence: string[] = [];
-      let verdict: Verdict = "pass";
-      const worse = (v: Verdict) => {
-        if (v === "fail" || (v === "warn" && verdict === "pass")) verdict = v;
-      };
-
-      // 1. Surface hook liveness: it touches this file on every prompt.
-      const heartbeat = path.join(ctx.myosHome, "MYOS/MEMORY/STATE/delta-surface-heartbeat");
-      const hbAge = fileAgeMs(heartbeat);
-      if (hbAge === null) {
-        worse("fail");
-        evidence.push("delta-surface-heartbeat missing: MemoryDeltaSurface is not firing (unregistered hook?)");
-      } else if (hbAge > 7 * 24 * 3_600_000) {
-        worse("warn");
-        evidence.push(`heartbeat is ${ageLabel(hbAge)} old: no myos prompt in a week, or the hook stopped`);
-      } else {
-        evidence.push(`surface hook firing (heartbeat ${ageLabel(hbAge)} old)`);
-      }
-
-      // 2. Freshness cache: the surface renders "freshness: no data" without it.
-      const cache = path.join(ctx.myosHome, "MYOS/USER/CACHE/freshness.json");
-      const cacheAge = fileAgeMs(cache);
-      if (cacheAge === null) {
-        worse("fail");
-        evidence.push('freshness.json never written: the surface renders "freshness: no data"; MemoryFreshnessRefresh (SessionStart) should have rebuilt it, or run bun MYOS/TOOLS/MemoryFreshness.ts');
-      } else if (cacheAge > 24 * 3_600_000) {
-        worse("warn");
-        evidence.push(`freshness.json is ${ageLabel(cacheAge)} old: the surface degrades to a staleness warning`);
-      } else {
-        evidence.push(`freshness cache ${ageLabel(cacheAge)} old`);
-      }
-
-      // 3. Curation: at least one autonomic write ever recorded.
-      const writes = path.join(ctx.myosHome, "MYOS/MEMORY/OBSERVABILITY/memory-writes.jsonl");
-      if (!existsSync(writes) || !hasCurationRun(readFileSync(writes, "utf8"))) {
-        worse("fail");
-        evidence.push('no MemorySystem.add row in memory-writes.jsonl: the surface renders "no curation runs yet"; MemoryReviewFire (Stop) spawns the reviewer after 8 turns / 30 min');
-      } else {
-        evidence.push("at least one curation run recorded");
-      }
-
-      return { verdict, evidence };
-    },
-  },
-  {
     id: "algorithm-parity",
     title: "ALGORITHM/LATEST names a doc that exists",
     async run(ctx) {
@@ -441,12 +393,6 @@ export const HEALTH_CHECKS: HealthCheck[] = [
         else if (name !== f.replace(/\.md$/, "")) problems.push(`${f}: frontmatter name "${name}" ≠ filename`);
       }
       evidence.push(`${defs.length} agent definitions, frontmatter names match filenames`);
-      // The externally-gated agents are out of live-probe scope by design; say so.
-      const codex = Bun.which("codex") !== null;
-      const gemini = Bun.which("gemini") !== null;
-      evidence.push(
-        `live probe covers ClaudeResearcher only: Forge/CodexResearcher ${codex ? "(codex present)" : "(codex absent)"}, GeminiResearcher ${gemini ? "(gemini present)" : "(gemini absent)"}, PerplexityResearcher (needs PERPLEXITY_API_KEY) use other vendors`,
-      );
       if (problems.length > 0) return { verdict: "fail", evidence: problems };
       return { verdict: "pass", evidence };
     },
@@ -495,23 +441,6 @@ export const PROBES: Probe[] = [
     },
   },
   {
-    id: "memory-surface",
-    title: "Memory delta line: hook injects, model renders it exactly once",
-    trials: 2,
-    need: 1,
-    run: (ctx) => myosTrial(ctx, "Reply with a one-line greeting. (release smoke-test)"),
-    grade(trial) {
-      // Graded on the response alone: headless stream-json emits no
-      // UserPromptSubmit hook events (probed 2026-07-29), and the delta block
-      // arrives via PromptProcessing anyway: the rendered line IS the proof
-      // that injection and compliance both happened.
-      const lines = memoryLineCount(trial.resultText);
-      if (lines !== 1) return { pass: false, evidence: `response carries ${lines} 🧠 MEMORY lines instead of 1: surface hook or compliance broken` };
-      const line = trial.resultText.match(/^🧠 MEMORY:.*$/m)?.[0] ?? "";
-      return { pass: true, evidence: `rendered once: ${line.slice(0, 90)}` };
-    },
-  },
-  {
     id: "skill-routing",
     title: "Skill invocation: the Writing skill loads and does its job",
     trials: 2,
@@ -537,7 +466,7 @@ export const PROBES: Probe[] = [
   },
   {
     id: "agent-dispatch",
-    title: "Agent dispatch: ClaudeResearcher spawns and returns",
+    title: "Agent dispatch: Max (the second look) spawns and returns",
     trials: 3,
     need: 1,
     run: (ctx) =>
@@ -546,16 +475,16 @@ export const PROBES: Probe[] = [
         // subagent_type is spelled out because a small model sometimes drops it
         // and spawns the default agent instead: which the grader rightly fails,
         // but that is model flakiness, not a broken agent definition.
-        'Spawn an agent using your agent-dispatch tool with subagent_type set exactly to "ClaudeResearcher" and this exact task: "Reply with exactly the string RESEARCHER-OK. Do not search the web. Do not use any tools." Then reply with only what the agent returned. (release smoke-test)',
+        'Spawn an agent using your agent-dispatch tool with subagent_type set exactly to "Max" and this exact task: "Reply with exactly the string MAX-OK. Do not search the web. Do not use any tools." Then reply with only what the agent returned. (release smoke-test)',
         ["--allowedTools", "Task,Agent"],
       ),
     grade(trial) {
       // The dispatch tool is named Agent on current harnesses, Task on older ones.
-      const dispatch = toolUses(trial.events).find((u) => (u.name === "Task" || u.name === "Agent") && u.input.includes("ClaudeResearcher"));
-      const returned = trial.resultText.includes("RESEARCHER-OK");
-      if (!dispatch) return { pass: false, evidence: "no dispatch tool_use naming ClaudeResearcher in the transcript: a claimed dispatch is not one" };
-      if (!returned) return { pass: false, evidence: "agent dispatched but RESEARCHER-OK never came back" };
-      return { pass: true, evidence: `${dispatch.name} → ClaudeResearcher dispatched, RESEARCHER-OK returned in ${(trial.durationMs / 1000).toFixed(1)}s` };
+      const dispatch = toolUses(trial.events).find((u) => (u.name === "Task" || u.name === "Agent") && u.input.includes("Max"));
+      const returned = trial.resultText.includes("MAX-OK");
+      if (!dispatch) return { pass: false, evidence: "no dispatch tool_use naming Max in the transcript: a claimed dispatch is not one" };
+      if (!returned) return { pass: false, evidence: "agent dispatched but MAX-OK never came back" };
+      return { pass: true, evidence: `${dispatch.name} → Max dispatched, MAX-OK returned in ${(trial.durationMs / 1000).toFixed(1)}s` };
     },
   },
   {

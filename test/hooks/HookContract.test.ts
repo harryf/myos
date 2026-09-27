@@ -153,8 +153,16 @@ describe("anti properties", () => {
     }
   });
 
-  test("no voice, notification server, kitty or 31337 reference", () => {
-    for (const { f, src } of sources) expect(src, f).not.toMatch(/31337|ntfy|osascript|elevenlabs|kitty|voice/i);
+  test("no voice, notification server, kitty, Pulse, telegram, pmai or 31337 reference", () => {
+    for (const { f, src } of sources) expect(src, f).not.toMatch(/31337|ntfy|osascript|elevenlabs|kitty|voice|pulse|telegram|pmai/i);
+  });
+
+  test("no ~/Projects assumption (Harry keeps projects in ~/Code)", () => {
+    for (const { f, src } of sources) expect(src, f).not.toMatch(/\bProjects\b/);
+  });
+
+  test("no hook shells out through execSync", () => {
+    for (const { f, src } of sources) expect(src, f).not.toMatch(/execSync\(/);
   });
 
   test("no em dash character in any hook source", () => {

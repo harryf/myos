@@ -2,18 +2,18 @@
  * Shared Time Utilities
  *
  * Consistent timestamp generation across the hook system. Every function below
- * renders in the configured timezone: MYOS_CONFIG.toml `principal.timezone`,
+ * renders in the configured timezone: MYOS_CONFIG.toml `[principal] timezone`,
  * falling back to the machine's own timezone. Nothing here is hardcoded to a
  * region, so a PM in Berlin gets Berlin timestamps without configuring anything.
  *
  * Used by: all hooks that need timestamps.
  */
 
-import { getPrincipal } from './identity';
+import { readConfigValue } from './config';
 
 /** Configured timezone, else the machine's own, else UTC. */
 function getTimezone(): string {
-  const configured = getPrincipal().timezone;
+  const configured = readConfigValue('principal', 'timezone') ?? '';
   if (configured && configured !== 'UTC') return configured;
   try {
     return Intl.DateTimeFormat().resolvedOptions().timeZone || configured || 'UTC';

@@ -26,10 +26,8 @@
  * Ported from LifeOS 7.40.4 VerificationGate 1.0.6
  */
 import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname } from "node:path";
-import { gateLog, verificationMode, type GateOutcome } from "./lib/gates";
-import { myosPath } from "./lib/paths";
+import { gateLog, verificationMode, verificationTypeMode, type GateOutcome } from "./lib/gates";
+import { isLatched, setLatch } from "./lib/latch";
 import { runStandalone, type GateContext } from "./lib/stop-context";
 import {
   flowExercised, hadCodeEdit, hadDeploy, hadFlowEdit, hadFrontendEdit, pixelViewed,
@@ -38,15 +36,20 @@ import {
 
 export const GATE = "VerificationGate";
 export const LOG_FILE = "verification-gate.jsonl";
-const latchPath = () => myosPath("MEMORY", "STATE", "verification-gate-blocked.json");
 
 // Claim units
 
-/** Splits on sentence and clause marks, but never inside a dotted number. */
+/**
+ * Splits on sentence and clause marks, but never inside a dotted number or a
+ * URL: URLs are masked first (a trailing full stop stays outside the mask)
+ * and put back in each unit.
+ */
 export function splitIntoUnits(text: string): string[] {
-  return text
+  const urls: string[] = [];
+  const masked = text.replace(/https?:\/\/\S+?(?=[.,;!?)]*(?:\s|$))/g, (u) => `\u0000U${urls.push(u) - 1}\u0000`);
+  return masked
     .split(/\n+|(?<!\d)[.!?;,]+|[.!?;,]+(?!\d)/)
-    .map((u) => (u ?? "").trim())
+    .map((u) => (u ?? "").replace(/\u0000U(\d+)\u0000/g, (_, i) => urls[Number(i)]!).trim())
     .filter(Boolean);
 }
 
@@ -97,7 +100,6 @@ const T5_LOCAL = /\b(local(ly)?|staged?|staging|payload|private\s+repo|~\/\.myos
 const PUBLIC_PROBE = /\bgit\s+ls-remote\b|\bgh\s+(api|release|repo|search)\b|github\.com|\bgit\s+fetch\b|\borigin\/main\b/i;
 
 export type ClaimType = "T1" | "T2" | "T3" | "T4" | "T5" | "TF";
-const BLOCKING_TYPES = new Set<ClaimType>(["T1", "T2", "T3"]);
 
 export function classifyClaim(message: string): { type: "T1" | "T2" | "T3" | "T4"; unit: string } | null {
   const units = splitIntoUnits(stripNoise(message)).filter((u) => unitIsClaimable(u));
@@ -154,21 +156,9 @@ export function contradictedCompletionUnit(message: string, evs: TxEvent[]): str
 export function fingerprint(session: string, type: string, unit: string): string {
   return createHash("sha256").update(`${session}|${type}|${unit.toLowerCase().replace(/\s+/g, " ").trim()}`).digest("hex").slice(0, 16);
 }
-function latched(fp: string): boolean {
-  try {
-    return existsSync(latchPath()) && (JSON.parse(readFileSync(latchPath(), "utf8")) as string[]).includes(fp);
-  } catch { return false; }
-}
-function latch(fp: string): void {
-  try {
-    const p = latchPath();
-    mkdirSync(dirname(p), { recursive: true });
-    let arr: string[] = [];
-    try { arr = JSON.parse(readFileSync(p, "utf8")); } catch { arr = []; }
-    arr.push(fp);
-    writeFileSync(p, JSON.stringify(arr.slice(-400)));
-  } catch { /* best effort */ }
-}
+const LATCH = "verification-gate-blocked";
+const latched = (session: string, fp: string) => isLatched(LATCH, session, fp);
+const latch = (session: string, fp: string) => setLatch(LATCH, session, fp);
 
 function evaluate(type: "T1" | "T2" | "T3" | "T4", ev: TxEvent[]): { acted: boolean; verified: boolean; gap: string } {
   if (type === "T1") {
@@ -196,7 +186,7 @@ const REASONS: Record<"T1" | "T2" | "T3", (u: string, gap: string) => string> = 
 export async function run(ctx: GateContext): Promise<GateOutcome | null> {
   try {
     const mode = verificationMode();
-    if (mode === "off" || process.env.VERIFGATE_OFF === "1") return null;
+    if (mode === "off") return null;
     const session = ctx.input.session_id ?? "unknown";
     const message = ctx.message;
     if (!message.trim()) return null;
@@ -212,53 +202,76 @@ export async function run(ctx: GateContext): Promise<GateOutcome | null> {
     const fail = (type: ClaimType, unit: string, reason: string, extra: Record<string, unknown> = {}): GateOutcome | null => {
       const fp = fingerprint(session, type, unit);
       if (ctx.recovery) return { gate: GATE, fail: true, reason };
-      const armed = mode === "block" && BLOCKING_TYPES.has(type) && process.env[`VERIFGATE_${type}`] !== "0";
-      if (armed && latched(fp)) return pass("pass-dedupe", { type });
+      const armed = verificationTypeMode(type) === "block";
+      if (armed && latched(session, fp)) return pass("pass-dedupe", { type });
       if (!armed) {
         log({ verdict: "fail", decision: "would-block", type, unit, reason, fingerprint: fp, would_block: true, ...extra });
         return { gate: GATE, fail: true, reason, block: false };
       }
-      latch(fp);
+      latch(session, fp);
       log({ verdict: "fail", decision: "block", type, unit, reason, fingerprint: fp, blocked: true, ...extra });
       return { gate: GATE, fail: true, reason, block: true };
     };
 
-    if (process.env.VERIFGATE_TF !== "0" && !spawnedAgent(ev)) {
+    // TF and T5 run first, but only a BLOCKING outcome returns early. A log
+    // only hit is kept and T1 to T3 still run, so "live on GitHub Pages at
+    // <url>" cannot hide a deploy claim behind its publicity row.
+    let pending: GateOutcome | null = null;
+    const keep = (out: GateOutcome | null): GateOutcome | null => {
+      if (out?.block) return out;
+      if (out?.fail && !pending) pending = out;
+      return null;
+    };
+
+    if (verificationTypeMode("TF") !== "off" && !spawnedAgent(ev)) {
       const tf = contradictedCompletionUnit(message, ev);
       if (tf) {
-        return fail("TF", tf, `COMPLETION OVER A FAILURE [VerificationGate/TF]. You claimed: "${tf}", but the turn's final tool call failed and nothing ran after it. Fix and re-run it, or say it failed.`);
-      }
-    }
-
-    if (process.env.VERIFGATE_T5 !== "0") {
-      const pub = publicityClaimUnit(message);
-      if (pub && !ctx.sessionEvents().some((e) => PUBLIC_PROBE.test(e.command ?? e.target))) {
-        const out = fail("T5", pub, `UNPROBED PUBLICITY CLAIM [VerificationGate/T5]. You asserted: "${pub}", but nothing this session probed the public side (git ls-remote, gh api or repo view, a github.com fetch).`);
+        const out = keep(fail("TF", tf, `COMPLETION OVER A FAILURE [VerificationGate/TF]. You claimed: "${tf}", but the turn's final tool call failed and nothing ran after it. Fix and re-run it, or say it failed.`));
         if (out) return out;
       }
     }
 
-    let claim = classifyClaim(message);
-    if (!claim || claim.type === "T1") {
-      const gu = genericFlowClaimUnit(message);
-      if (gu && hadFlowEdit(ev)) claim = { type: "T2", unit: gu };
+    if (verificationTypeMode("T5") !== "off") {
+      const pub = publicityClaimUnit(message);
+      if (pub && !ctx.sessionEvents().some((e) => PUBLIC_PROBE.test(e.command ?? e.target))) {
+        const out = keep(fail("T5", pub, `UNPROBED PUBLICITY CLAIM [VerificationGate/T5]. You asserted: "${pub}", but nothing this session probed the public side (git ls-remote, gh api or repo view, a github.com fetch).`));
+        if (out) return out;
+      }
     }
-    if (!claim) return pass("no-claim");
 
-    const { acted, verified, gap } = evaluate(claim.type, ev);
-    if (spawnedAgent(ev)) {
-      return pass("pass-subagent", { type: claim.type, unit: claim.unit, would_block_without_subagent: acted && !verified });
-    }
-    if (!acted) return pass("pass-no-activity", { type: claim.type });
-    if (verified) return pass("pass-verified", { type: claim.type });
-
-    const reason = claim.type === "T4"
-      ? `CODE CLAIM WITHOUT A PASSING TEST [VerificationGate/T4]. You claimed: "${claim.unit}". The transcript shows ${gap}.`
-      : REASONS[claim.type](claim.unit, gap);
-    return fail(claim.type, claim.unit, reason, { gap });
+    const main = checkClaim(message, ev, pass, fail);
+    return main?.block ? main : (pending ?? main);
   } catch {
     return null;
   }
+}
+
+/** T1 to T4: classify the strongest claim and weigh it against the turn's evidence. */
+function checkClaim(
+  message: string,
+  ev: TxEvent[],
+  pass: (decision: string, extra?: Record<string, unknown>) => null,
+  fail: (type: ClaimType, unit: string, reason: string, extra?: Record<string, unknown>) => GateOutcome | null,
+): GateOutcome | null {
+  let claim = classifyClaim(message);
+  if (!claim || claim.type === "T1") {
+    const gu = genericFlowClaimUnit(message);
+    if (gu && hadFlowEdit(ev)) claim = { type: "T2", unit: gu };
+  }
+  if (!claim) return pass("no-claim");
+  if (verificationTypeMode(claim.type) === "off") return pass("pass-type-off", { type: claim.type });
+
+  const { acted, verified, gap } = evaluate(claim.type, ev);
+  if (spawnedAgent(ev)) {
+    return pass("pass-subagent", { type: claim.type, unit: claim.unit, would_block_without_subagent: acted && !verified });
+  }
+  if (!acted) return pass("pass-no-activity", { type: claim.type });
+  if (verified) return pass("pass-verified", { type: claim.type });
+
+  const reason = claim.type === "T4"
+    ? `CODE CLAIM WITHOUT A PASSING TEST [VerificationGate/T4]. You claimed: "${claim.unit}". The transcript shows ${gap}.`
+    : REASONS[claim.type](claim.unit, gap);
+  return fail(claim.type, claim.unit, reason, { gap });
 }
 
 if (import.meta.main) runStandalone(run).finally(() => process.exit(0));

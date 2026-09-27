@@ -27,11 +27,7 @@ export type GateMode = "off" | "log" | "block";
 
 /** The effective mode after env override and config. */
 export function gateMode(): GateMode {
-  const env = (process.env.MYOS_GATES ?? "").trim().toLowerCase();
-  if (env === "off" || env === "0" || env === "false") return "off";
-  if (env === "log") return "log";
-  if (env === "block" || env === "on" || env === "1" || env === "true") return "block";
-  return configBlocking() ? "block" : "log";
+  return envGateMode() ?? (configBlocking() ? "block" : "log");
 }
 
 /** True when every gate must stay silent. Check this first and exit 0. */
@@ -113,11 +109,12 @@ export function envGateMode(): GateMode | null {
 }
 
 /**
- * VerificationGate is the one gate that ships armed. MYOS_GATES still wins
- * (off silences it, log demotes it); otherwise `[gates] verification` in the
+ * VerificationGate is the one gate that ships armed. VERIFGATE_OFF=1 and
+ * MYOS_GATES win (off silences it, log demotes it); otherwise `[gates] verification` in the
  * config may say "log" or "off"; the default is "block".
  */
 export function verificationMode(): GateMode {
+  if (process.env.VERIFGATE_OFF === "1") return "off";
   const env = envGateMode();
   if (env) return env;
   const cfg = (readConfigValue("gates", "verification") ?? "").toLowerCase();
@@ -137,4 +134,25 @@ export interface GateOutcome {
   fail: boolean;
   reason?: string;
   block?: boolean;
+}
+
+/** Claim types VerificationGate may block on; the rest only ever log. */
+export const VERIFICATION_BLOCKING_TYPES: readonly string[] = ["T1", "T2", "T3"];
+
+/**
+ * The mode for one VerificationGate claim type. The table, in one place:
+ *   gate mode off                  -> off
+ *   VERIFGATE_<type>=off           -> off (the type is not evaluated)
+ *   VERIFGATE_<type>=0 or =log     -> log
+ *   T4, T5, TF                     -> log at most
+ *   T1, T2, T3                     -> the gate mode (block by default)
+ */
+export function verificationTypeMode(type: string): GateMode {
+  const base = verificationMode();
+  if (base === "off") return "off";
+  const own = (process.env[`VERIFGATE_${type}`] ?? "").trim().toLowerCase();
+  if (own === "off") return "off";
+  if (own === "0" || own === "log") return "log";
+  if (!VERIFICATION_BLOCKING_TYPES.includes(type)) return "log";
+  return base;
 }

@@ -1,6 +1,6 @@
 # myos: plan of action
 
-Status: DRAFT FOR REVIEW, 2026-09-27. Nothing is built yet. Read section 1 (the verdict), section 8 (questions), then the phases in section 9. The detail behind every claim is in `docs/research/` (four reports, about 3,000 lines).
+Status: APPROVED 2026-09-27 (Harry's answers are in section 8); phases 1 to 5 BUILT 2026-09-28, see ISA.md run 2 and MIGRATION.md. Phase 6, the two week trial, starts with the first `myos` session. Read section 1 (the verdict), section 8 (questions), then the phases in section 9. The detail behind every claim is in `docs/research/` (four reports, about 3,000 lines).
 
 myos is the lean successor to two forks of Daniel Miessler's PAI that Harry runs today: the personal install at `~/.claude-personal` (PAI 5.0.0, Algorithm v6.3.0, symlinked from `~/.claude`) and the work port at `~/.pmai` (pmai 0.32.0, source repo `~/Code/gigs/pmai/pmai`). Upstream has become LifeOS (v7.40.4, Algorithm v8.20.2). myos takes the intelligence and the skills, none of the voice, notifications, dashboards or servers.
 

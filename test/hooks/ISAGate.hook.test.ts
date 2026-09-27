@@ -91,7 +91,11 @@ describe("Anti", () => {
     expect(await rows(home)).toEqual([]);
   });
 
-  test("Anti: MYOS_GATES=off is silent", async () => {
+  test("Anti: MYOS_GATES=off is silent (positive control: log mode writes one row)", async () => {
+    using control = myosHome("isagate-off-control");
+    const cisa = control.write("Code/tool/ISA.md", COMPLETE_BUT_OPEN);
+    await runHook(HOOK, { home: control, stdin: events.stop({ transcript_path: editedTurn(control, cisa) }), env: { MYOS_GATES: "log" } });
+    expect(await rows(control)).toHaveLength(1);
     using home = myosHome("isagate-off");
     const isa = home.write("Code/tool/ISA.md", COMPLETE_BUT_OPEN);
     const r = await runHook(HOOK, { home, stdin: events.stop({ transcript_path: editedTurn(home, isa) }), env: { MYOS_GATES: "off" } });

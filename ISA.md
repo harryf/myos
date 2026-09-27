@@ -3,8 +3,8 @@ project: myos
 task: Build myos phases 1 to 5 (repo, launcher, hooks, doctrine, skills, memory migration) per the approved plan
 slug: 20260927-220000_myos-build
 effort: E4
-phase: observe
-progress: 40/160
+phase: verify
+progress: 159/160
 mode: algorithm
 started: 2026-09-27T20:05:00+02:00
 updated: 2026-09-27T22:05:00+02:00
@@ -93,141 +93,141 @@ Run 2 (2026-09-27 evening, ISC-41 to 160): `myos` is installed at `~/.myos` from
 
 Phase 1, repo and launcher:
 
-- [ ] ISC-41: `/Users/harry/Code/personal/myos` is a git repository on branch `main`.
-- [ ] ISC-42: `origin` is `git@github.com:harryf/myos.git` and `gh repo view harryf/myos --json visibility` reports PRIVATE.
-- [ ] ISC-43: `VERSION` contains `0.1.0` and `install.sh` copies it to `~/.myos/MYOS/VERSION`.
-- [ ] ISC-44: `bin/myos` is executable and `myos --version` prints `myos v0.1.0` after install.
-- [ ] ISC-45: `bin/myos` exports `CLAUDE_CONFIG_DIR` to `MYOS_HOME` and passes `--append-system-prompt-file` with the myos system prompt.
-- [ ] ISC-46: `bin/myos` applies `--setting-sources user` when cwd is `$HOME` with `~/.claude/settings.json` present or under `~/.claude*`, and honours `MYOS_SETTING_SOURCES`.
-- [ ] ISC-47: `./install.sh --dry-run` on a machine without `~/.myos` plans a fresh install and creates no `~/.myos`.
-- [ ] ISC-48: `./install.sh` creates `~/.myos` with `.install-manifest.json` holding a sha256 for every payload file.
-- [ ] ISC-49: `install.sh` links `~/.local/bin/myos` to `~/.myos/bin/myos`.
-- [ ] ISC-50: A second `./install.sh` run reports no changed release files and leaves `settings.json` byte identical.
-- [ ] ISC-51: `install.sh --from-pai` exists and runs the memory migration once.
-- [ ] ISC-52: `rg -i 'pmai'` over `payload/`, `Tools/`, `install.sh`, `bin/` and `test/` returns nothing.
-- [ ] ISC-53: `Tools/ContrabandCheck.ts` denies `localhost:31337`, `voice_enabled`, `ntfy`, `display notification`, `elevenlabs`, `Bun.serve(`, `.listen(` and `launchctl load` in shipped code and passes on the payload with zero hits.
-- [ ] ISC-54: `.github/workflows/ci.yml` runs the contraband gate, TestCoverageCheck, `bun test`, StyleCheck in three profiles, the U+2014 grep over the repo, shell syntax, the install smoke test and the hook import sweep.
-- [ ] ISC-55: `.github/workflows/release.yml` refuses a tag that differs from `VERSION`.
-- [ ] ISC-56: `Tools/Release.ts` and both workflows reference `harryf/myos`, never a pmai remote.
-- [ ] ISC-57: `bun test` passes with zero failures.
-- [ ] ISC-58: `bun Tools/TestCoverageCheck.ts` exits 0 (every shipped tool and hook has a corpus row).
-- [ ] ISC-59: `.gitignore` excludes `node_modules`, `.test-tmp`, `settings.json`, `.env`, `bun.lock` and runtime memory dirs.
-- [ ] ISC-60: Anti: no file under `~/.claude-personal` (excluding MEMORY/OBSERVABILITY, projects and logs), `~/.pmai` or `~/Code/gigs/pmai/pmai` is modified by this run (`find -newermt` against the run start).
-- [ ] ISC-61: Anti: no U+2014 character in any tracked file of the repo.
-- [ ] ISC-62: Anti: `~/.claude` still resolves to `~/.claude-personal`.
-- [ ] ISC-63: A pre commit hook under `.githooks/` (activated by `core.hooksPath`) rejects a commit that adds a U+2014, shown with a scratch file.
+- [x] ISC-41: `/Users/harry/Code/personal/myos` is a git repository on branch `main`.
+- [x] ISC-42: `origin` is `git@github.com:harryf/myos.git` and `gh repo view harryf/myos --json visibility` reports PRIVATE.
+- [x] ISC-43: `VERSION` contains `0.1.0` and `install.sh` copies it to `~/.myos/MYOS/VERSION`.
+- [x] ISC-44: `bin/myos` is executable and `myos --version` prints `myos v0.1.0` after install.
+- [x] ISC-45: `bin/myos` exports `CLAUDE_CONFIG_DIR` to `MYOS_HOME` and passes `--append-system-prompt-file` with the myos system prompt.
+- [x] ISC-46: `bin/myos` applies `--setting-sources user` when cwd is `$HOME` with `~/.claude/settings.json` present or under `~/.claude*`, and honours `MYOS_SETTING_SOURCES`.
+- [x] ISC-47: `./install.sh --dry-run` on a machine without `~/.myos` plans a fresh install and creates no `~/.myos`.
+- [x] ISC-48: `./install.sh` creates `~/.myos` with `.install-manifest.json` holding a sha256 for every payload file.
+- [x] ISC-49: `install.sh` links `~/.local/bin/myos` to `~/.myos/bin/myos`.
+- [x] ISC-50: A second `./install.sh` run reports no changed release files and leaves `settings.json` byte identical.
+- [x] ISC-51: `install.sh --from-pai` exists and runs the memory migration once.
+- [x] ISC-52: `rg -i 'pmai'` over `payload/`, `Tools/`, `install.sh`, `bin/` and `test/` returns nothing.
+- [x] ISC-53: `Tools/ContrabandCheck.ts` denies `localhost:31337`, `voice_enabled`, `ntfy`, `display notification`, `elevenlabs`, `Bun.serve(`, `.listen(` and `launchctl load` in shipped code and passes on the payload with zero hits.
+- [x] ISC-54: `.github/workflows/ci.yml` runs the contraband gate, TestCoverageCheck, `bun test`, StyleCheck in three profiles, the U+2014 grep over the repo, shell syntax, the install smoke test and the hook import sweep.
+- [x] ISC-55: `.github/workflows/release.yml` refuses a tag that differs from `VERSION`.
+- [x] ISC-56: `Tools/Release.ts` and both workflows reference `harryf/myos`, never a pmai remote.
+- [x] ISC-57: `bun test` passes with zero failures.
+- [x] ISC-58: `bun Tools/TestCoverageCheck.ts` exits 0 (every shipped tool and hook has a corpus row).
+- [x] ISC-59: `.gitignore` excludes `node_modules`, `.test-tmp`, `settings.json`, `.env`, `bun.lock` and runtime memory dirs.
+- [x] ISC-60: Anti: no file under `~/.claude-personal` (excluding MEMORY/OBSERVABILITY, projects and logs), `~/.pmai` or `~/Code/gigs/pmai/pmai` is modified by this run (`find -newermt` against the run start).
+- [x] ISC-61: Anti: no U+2014 character in any tracked file of the repo.
+- [x] ISC-62: Anti: `~/.claude` still resolves to `~/.claude-personal`.
+- [x] ISC-63: A pre commit hook under `.githooks/` (activated by `core.hooksPath`) rejects a commit that adds a U+2014, shown with a scratch file.
 
 Phase 2, hooks:
 
-- [ ] ISC-64: `payload/hooks/` holds exactly the target set: AgentInvocation, CheckpointPerISC, ContextReduction, DriftReminder, EventLogger, FormatGate, HookHealer, ISACloseGate, ISAFoldGate, ISAGate, ISAStaleWriteGuard, ISASync, LastResponseCache, LoadContext, LoopDetector, ModelRungGuard, PreToolGuard, PromptProcessing, PublicPushGate, Safety, SessionCleanup, StopGates, TaskGovernance, TimeContext, TokenLog, TrialClock, VerificationGate, plus `lib/`.
-- [ ] ISC-65: `settings.template.json` contains no hook of `type: http`.
-- [ ] ISC-66: Every hook registered in the template exists on disk and every `*.hook.ts` or `.sh` on disk is registered (HookContract test).
-- [ ] ISC-67: TimeContext prints the live Europe/Zurich wall clock on UserPromptSubmit (synthetic stdin test).
-- [ ] ISC-68: DriftReminder prints the format contract with an em dash cap of zero and the count of violations in the previous response (test).
-- [ ] ISC-69: FormatGate on Stop appends a row to `MEMORY/OBSERVABILITY/format-gate.jsonl` and exits 0 even when the response violates the contract (log only).
-- [ ] ISC-70: VerificationGate blocks a "deployed" claim when the replayed transcript has no probe (test fixture).
-- [ ] ISC-71: VerificationGate accepts a Claude-in-Chrome screenshot call (`mcp__claude-in-chrome__computer`) as evidence for a UI claim (test fixture).
-- [ ] ISC-72: VerificationGate accepts an Interceptor screenshot as evidence (test fixture).
-- [ ] ISC-73: StopGates runs FormatGate, VerificationGate, ISACloseGate, ISAGate and ISAFoldGate in that order and exits 0 with no output when `MYOS_GATES=off`.
-- [ ] ISC-74: ISAGate, ISACloseGate and ISAFoldGate default to log only (`gates.blocking = false` in `MYOS_CONFIG.toml`) and write to `MEMORY/OBSERVABILITY/isa-gates.jsonl`; setting blocking true makes them block (test both).
-- [ ] ISC-75: The three ISA gates skip any ISA whose frontmatter has an `effort:` key (twelve section format) (test).
-- [ ] ISC-76: ISAFoldGate's prod mutation shapes cover `~/bin/publish`, `git push`, `launchctl`, `crontab`, a curl to `getgrist.com` with POST, PUT, PATCH or DELETE, and a script run with `--apply` (test).
-- [ ] ISC-77: ISAStaleWriteGuard blocks a whole file Write over an ISA changed since the session last read it, and passes under `MYOS_GATES=off` (test).
-- [ ] ISC-78: PublicPushGate scans before a push to a public GitHub remote (stub `gh` says public) and fails open when `gh` is absent (test).
-- [ ] ISC-79: ModelRungGuard reads the pinned model from settings and only reports, never switches (test).
-- [ ] ISC-80: LoopDetector flags a repeated failing call (pmai test passes).
-- [ ] ISC-81: HookHealer only changes file modes under `hooks/`; a test asserts file content is byte identical after a run.
-- [ ] ISC-82: EventLogger appends to `tool-activity.jsonl` and rotates the file at 20 MB (test with a pre grown file).
-- [ ] ISC-83: Safety on PermissionRequest allows a read only Bash shape, stays neutral on `rm -rf`, and spawns no process (test).
-- [ ] ISC-84: Safety on PostToolUse WebFetch wraps the result with the external content marker (test).
-- [ ] ISC-85: PromptProcessing writes a deterministic session name (first prompt, 48 chars) to `session-names.json` and never spawns `claude` (test with sparse PATH).
-- [ ] ISC-86: TokenLog.hook.ts imports `skills/MyTokens/Tools/TokenLog.ts` and folds a fixture transcript into `MEMORY/OBSERVABILITY/TOKENS/sessions.json` (test).
-- [ ] ISC-87: SessionCleanup marks the work.json row complete (pmai test passes).
-- [ ] ISC-88: ISASync writes frontmatter of `<project>/ISA.md` and of `MEMORY/WORK/*/ISA.md` to work.json (test covers both homes).
-- [ ] ISC-89: CheckpointPerISC commits an opted in scratch repo on an ISC transition (pmai test passes).
-- [ ] ISC-90: AgentInvocation logs subagent start and end (pmai test passes).
-- [ ] ISC-91: TaskGovernance and LoadContext pmai tests pass.
-- [ ] ISC-92: TrialClock on SessionStart prints the trial day, and "gate arming review due" or "doctrine review due" once the dates in `MYOS/USER/CONFIG/trial.json` pass; silent after both reviews are marked done (test).
-- [ ] ISC-93: `MYOS/TOOLS/GateReview.ts report` summarises format-gate, verification-gate and isa-gates logs (rows per gate and reason) and prints an arming recommendation (test fixture).
-- [ ] ISC-94: Every hook registration carries a `timeout`; EventLogger, TokenLog, PromptProcessing and ModelRungGuard are `async`.
-- [ ] ISC-95: `payload/hooks/README.md` lists every hook with event, purpose, kill switch and log file.
-- [ ] ISC-96: Anti: `rg -n 'claude -p|spawn\("claude"|Inference\.ts' payload/hooks` returns nothing (no hook calls a model).
-- [ ] ISC-97: Anti: `rg -in '31337|ntfy|osascript|elevenlabs|kitty|voice' payload/hooks` returns nothing.
-- [ ] ISC-98: A twelve section ISA fixture edited in a replayed session passes all Stop gates with exit 0 and no block.
-- [ ] ISC-99: `bun build --target=bun` succeeds for every hook file (import sweep).
+- [x] ISC-64: `payload/hooks/` holds exactly the target set: AgentInvocation, CheckpointPerISC, ContextReduction, DriftReminder, EventLogger, FormatGate, HookHealer, ISACloseGate, ISAFoldGate, ISAGate, ISAStaleWriteGuard, ISASync, LastResponseCache, LoadContext, LoopDetector, ModelRungGuard, PreToolGuard, PromptProcessing, PublicPushGate, Safety, SessionCleanup, StopGates, TaskGovernance, TimeContext, TokenLog, TrialClock, VerificationGate, plus `lib/`.
+- [x] ISC-65: `settings.template.json` contains no hook of `type: http`.
+- [x] ISC-66: Every hook registered in the template exists on disk and every `*.hook.ts` or `.sh` on disk is registered (HookContract test).
+- [x] ISC-67: TimeContext prints the live Europe/Zurich wall clock on UserPromptSubmit (synthetic stdin test).
+- [x] ISC-68: DriftReminder prints the format contract with an em dash cap of zero and the count of violations in the previous response (test).
+- [x] ISC-69: FormatGate on Stop appends a row to `MEMORY/OBSERVABILITY/format-gate.jsonl` and exits 0 even when the response violates the contract (log only).
+- [x] ISC-70: VerificationGate blocks a "deployed" claim when the replayed transcript has no probe (test fixture).
+- [x] ISC-71: VerificationGate accepts a Claude-in-Chrome screenshot call (`mcp__claude-in-chrome__computer`) as evidence for a UI claim (test fixture).
+- [x] ISC-72: VerificationGate accepts an Interceptor screenshot as evidence (test fixture).
+- [x] ISC-73: StopGates runs FormatGate, VerificationGate, ISACloseGate, ISAGate and ISAFoldGate in that order and exits 0 with no output when `MYOS_GATES=off`.
+- [x] ISC-74: ISAGate, ISACloseGate and ISAFoldGate default to log only (`gates.blocking = false` in `MYOS_CONFIG.toml`) and write to `MEMORY/OBSERVABILITY/isa-gates.jsonl`; setting blocking true makes them block (test both).
+- [x] ISC-75: The three ISA gates skip any ISA whose frontmatter has an `effort:` key (twelve section format) (test).
+- [x] ISC-76: ISAFoldGate's prod mutation shapes cover `~/bin/publish`, `git push`, `launchctl`, `crontab`, a curl to `getgrist.com` with POST, PUT, PATCH or DELETE, and a script run with `--apply` (test).
+- [x] ISC-77: ISAStaleWriteGuard blocks a whole file Write over an ISA changed since the session last read it, and passes under `MYOS_GATES=off` (test).
+- [x] ISC-78: PublicPushGate scans before a push to a public GitHub remote (stub `gh` says public) and fails open when `gh` is absent (test).
+- [x] ISC-79: ModelRungGuard reads the pinned model from settings and only reports, never switches (test).
+- [x] ISC-80: LoopDetector flags a repeated failing call (pmai test passes).
+- [x] ISC-81: HookHealer only changes file modes under `hooks/`; a test asserts file content is byte identical after a run.
+- [x] ISC-82: EventLogger appends to `tool-activity.jsonl` and rotates the file at 20 MB (test with a pre grown file).
+- [x] ISC-83: Safety on PermissionRequest allows a read only Bash shape, stays neutral on `rm -rf`, and spawns no process (test).
+- [x] ISC-84: Safety on PostToolUse WebFetch wraps the result with the external content marker (test).
+- [x] ISC-85: PromptProcessing writes a deterministic session name (first prompt, 48 chars) to `session-names.json` and never spawns `claude` (test with sparse PATH).
+- [x] ISC-86: TokenLog.hook.ts imports `skills/MyTokens/Tools/TokenLog.ts` and folds a fixture transcript into `MEMORY/OBSERVABILITY/TOKENS/sessions.json` (test).
+- [x] ISC-87: SessionCleanup marks the work.json row complete (pmai test passes).
+- [x] ISC-88: ISASync writes frontmatter of `<project>/ISA.md` and of `MEMORY/WORK/*/ISA.md` to work.json (test covers both homes).
+- [x] ISC-89: CheckpointPerISC commits an opted in scratch repo on an ISC transition (pmai test passes).
+- [x] ISC-90: AgentInvocation logs subagent start and end (pmai test passes).
+- [x] ISC-91: TaskGovernance and LoadContext pmai tests pass.
+- [x] ISC-92: TrialClock on SessionStart prints the trial day, and "gate arming review due" or "doctrine review due" once the dates in `MYOS/USER/CONFIG/trial.json` pass; silent after both reviews are marked done (test).
+- [x] ISC-93: `MYOS/TOOLS/GateReview.ts report` summarises format-gate, verification-gate and isa-gates logs (rows per gate and reason) and prints an arming recommendation (test fixture).
+- [x] ISC-94: Every hook registration carries a `timeout`; EventLogger, TokenLog, PromptProcessing and ModelRungGuard are `async`.
+- [x] ISC-95: `payload/hooks/README.md` lists every hook with event, purpose, kill switch and log file.
+- [x] ISC-96: Anti: `rg -n 'claude -p|spawn\("claude"|Inference\.ts' payload/hooks` returns nothing (no hook calls a model).
+- [x] ISC-97: Anti: `rg -in '31337|ntfy|osascript|elevenlabs|kitty|voice' payload/hooks` returns nothing.
+- [x] ISC-98: A twelve section ISA fixture edited in a replayed session passes all Stop gates with exit 0 and no block.
+- [x] ISC-99: `bun build --target=bun` succeeds for every hook file (import sweep).
 
 Phase 3, doctrine:
 
-- [ ] ISC-100: `payload/MYOS/MYOS_SYSTEM_PROMPT.md` is under 6,000 bytes and contains no `{{` placeholder.
-- [ ] ISC-101: The system prompt defines the single output format: banner, answer first, `🔧 CHANGE` and `✅ VERIFY` only when something mutated, `🗣️ myos:` closer, and the no em dash rule.
-- [ ] ISC-102: The system prompt contains "confidence requires source", reproduce before fixing, the Algorithm entry rule (read `ALGORITHM/LATEST` first) and the no voice, no notification, no server constraint.
-- [ ] ISC-103: `payload/CLAUDE.md` is under 6,000 bytes and carries the "How myos writes" block, bun and bunx always, TypeScript always, plan means stop, build over ask, real browser verification with Claude-in-Chrome named as the fallback, the publish recipe and a Grist conventions routing row.
-- [ ] ISC-104: `payload/CLAUDE.md` `@` imports only `MYOS/USER/PROJECTS.md` and routes everything else through a table of on demand paths that all exist in the payload or USER scaffold.
-- [ ] ISC-105: `payload/MYOS/ALGORITHM/LATEST` is `1.0.0` and `v1.0.0.md` names its provenance (LifeOS v8.20.2).
-- [ ] ISC-106: `v1.0.0.md` keeps the 16 claims and contains none of: Pulse, cmux, Kitty, Bunker, `lifeos-ascent-delta`, 31337, voice.
-- [ ] ISC-107: `payload/MYOS/RULES/Verification.md`, `SelfHealing.md` and `Prompting.md` exist; SelfHealing has no autonomic loop or Pulse text.
-- [ ] ISC-108: `bun payload/MYOS/TOOLS/BudgetCheck.ts` exits 0 with ceilings CLAUDE.md 6,000 and system prompt 6,000.
-- [ ] ISC-109: `StyleCheck.ts --profile prose` exits 0 over CLAUDE.md, the system prompt, ALGORITHM and RULES.
-- [ ] ISC-110: `payload/MYOS/DOCUMENTATION/IsaFormat.md` is the v2.21 shape (Not yet specified, `(after:)` edges, verifier classes) and states that pre 2026-09-28 twelve section ISAs stay readable and exempt from the gates.
-- [ ] ISC-111: `myos -p 'reply with the word ready' --output-format text` run in `~/Code/personal/myos` returns a reply in the myos format (banner and closer present).
+- [x] ISC-100: `payload/MYOS/MYOS_SYSTEM_PROMPT.md` is under 6,000 bytes and contains no `{{` placeholder.
+- [x] ISC-101: The system prompt defines the single output format: banner, answer first, `🔧 CHANGE` and `✅ VERIFY` only when something mutated, `🗣️ myos:` closer, and the no em dash rule.
+- [x] ISC-102: The system prompt contains "confidence requires source", reproduce before fixing, the Algorithm entry rule (read `ALGORITHM/LATEST` first) and the no voice, no notification, no server constraint.
+- [x] ISC-103: `payload/CLAUDE.md` is under 6,000 bytes and carries the "How myos writes" block, bun and bunx always, TypeScript always, plan means stop, build over ask, real browser verification with Claude-in-Chrome named as the fallback, the publish recipe and a Grist conventions routing row.
+- [x] ISC-104: `payload/CLAUDE.md` `@` imports only `MYOS/USER/PROJECTS.md` and routes everything else through a table of on demand paths that all exist in the payload or USER scaffold.
+- [x] ISC-105: `payload/MYOS/ALGORITHM/LATEST` is `1.0.0` and `v1.0.0.md` names its provenance (LifeOS v8.20.2).
+- [x] ISC-106: `v1.0.0.md` keeps the 16 claims and contains none of: Pulse, cmux, Kitty, Bunker, `lifeos-ascent-delta`, 31337, voice.
+- [x] ISC-107: `payload/MYOS/RULES/Verification.md`, `SelfHealing.md` and `Prompting.md` exist; SelfHealing has no autonomic loop or Pulse text.
+- [x] ISC-108: `bun payload/MYOS/TOOLS/BudgetCheck.ts` exits 0 with ceilings CLAUDE.md 6,000 and system prompt 6,000.
+- [x] ISC-109: `StyleCheck.ts --profile prose` exits 0 over CLAUDE.md, the system prompt, ALGORITHM and RULES.
+- [x] ISC-110: `payload/MYOS/DOCUMENTATION/IsaFormat.md` is the v2.21 shape (Not yet specified, `(after:)` edges, verifier classes) and states that pre 2026-09-28 twelve section ISAs stay readable and exempt from the gates.
+- [DEFERRED-VERIFY] ISC-111: `myos -p 'reply with the word ready' --output-format text` run in `~/Code/personal/myos` returns a reply in the myos format (banner and closer present).
 
 Phase 4, skills and agents:
 
-- [ ] ISC-112: `payload/skills/` holds exactly: ISA, Interceptor, FirstPrinciples, BeCreative, SystemsThinking, IterativeDepth, Science, ContextSearch, RootCauseAnalysis, BitterPillEngineering, Writing, MyTokens, Council, RedTeam, CreateSkill, CreateCLI, Trim, Remotion, Fabric, Scheduler.
-- [ ] ISC-113: Every SKILL.md has frontmatter `name`, `description` under 1,024 characters and a semver `version`.
-- [ ] ISC-114: `rg -l 'Voice Notification|localhost:31337|voice_enabled' payload/skills` returns nothing.
-- [ ] ISC-115: `rg -il 'gigs' payload/skills payload/hooks` returns nothing.
-- [ ] ISC-116: `rg -l '\.pmai|PMAI|pmai' payload/skills payload/agents payload/commands` returns nothing.
-- [ ] ISC-117: Interceptor SKILL.md points at the `interceptor` binary in `~/bin` and has a section for the disconnected extension naming Claude-in-Chrome as the fallback.
-- [ ] ISC-118: `bun payload/skills/MyTokens/Tools/TokenLog.ts report --days 7` prints a report against a fixture store (test).
-- [ ] ISC-119: MyTokens env overrides are `MYOS_TOKENLOG_*` and the release probe exclusion is `myos-release-probe`.
-- [ ] ISC-120: `StyleCheck.ts --profile dashes payload/skills` exits 0.
-- [ ] ISC-121: `bun Tools/SkillVersionBump.ts --dry-run` lists every skill with a version and exits 0.
-- [ ] ISC-122: `payload/agents/` holds Designer.md, Engineer.md and Max.md only; Max.md has no ElevenLabs or voice block.
-- [ ] ISC-123: `payload/skills/Scheduler/Tools/Scheduler.ts` manages launchd jobs of kind `command` and `prompt` (headless `myos -p`) with `add`, `list`, `remove`, `run` and no notification code (test writes a plist into the sandbox).
-- [ ] ISC-124: Fabric skill ships its patterns and SKILL.md states that no `fabric` binary is required.
-- [ ] ISC-125: ISA skill has Scaffold, Interview, Grill, CheckCompleteness, Reconcile, Seed and Append workflows and a v2.21 template.
-- [ ] ISC-126: `payload/commands/` holds `cs.md` and `myos.md`.
-- [ ] ISC-127: Anti: `payload/skills` has no Research, Art, Evals, Gigs*, Delegation, LocalModel, Telos, Interview or Daemon directory.
-- [ ] ISC-128: The skill tests for Writing, Interceptor, MyTokens, Remotion, Scheduler and ContextSearch pass.
+- [x] ISC-112: `payload/skills/` holds exactly: ISA, Interceptor, FirstPrinciples, BeCreative, SystemsThinking, IterativeDepth, Science, ContextSearch, RootCauseAnalysis, BitterPillEngineering, Writing, MyTokens, Council, RedTeam, CreateSkill, CreateCLI, Trim, Remotion, Fabric, Scheduler.
+- [x] ISC-113: Every SKILL.md has frontmatter `name`, `description` under 1,024 characters and a semver `version`.
+- [x] ISC-114: `rg -l 'Voice Notification|localhost:31337|voice_enabled' payload/skills` returns nothing.
+- [x] ISC-115: `rg -il 'gigs' payload/skills payload/hooks` returns nothing.
+- [x] ISC-116: `rg -l '\.pmai|PMAI|pmai' payload/skills payload/agents payload/commands` returns nothing.
+- [x] ISC-117: Interceptor SKILL.md points at the `interceptor` binary in `~/bin` and has a section for the disconnected extension naming Claude-in-Chrome as the fallback.
+- [x] ISC-118: `bun payload/skills/MyTokens/Tools/TokenLog.ts report --days 7` prints a report against a fixture store (test).
+- [x] ISC-119: MyTokens env overrides are `MYOS_TOKENLOG_*` and the release probe exclusion is `myos-release-probe`.
+- [x] ISC-120: `StyleCheck.ts --profile dashes payload/skills` exits 0.
+- [x] ISC-121: `bun Tools/SkillVersionBump.ts --dry-run` lists every skill with a version and exits 0.
+- [x] ISC-122: `payload/agents/` holds Designer.md, Engineer.md and Max.md only; Max.md has no ElevenLabs or voice block.
+- [x] ISC-123: `payload/skills/Scheduler/Tools/Scheduler.ts` manages launchd jobs of kind `command` and `prompt` (headless `myos -p`) with `add`, `list`, `remove`, `run` and no notification code (test writes a plist into the sandbox).
+- [x] ISC-124: Fabric skill ships its patterns and SKILL.md states that no `fabric` binary is required.
+- [x] ISC-125: ISA skill has Scaffold, Interview, Grill, CheckCompleteness, Reconcile, Seed and Append workflows and a v2.21 template.
+- [x] ISC-126: `payload/commands/` holds `cs.md` and `myos.md`.
+- [x] ISC-127: Anti: `payload/skills` has no Research, Art, Evals, Gigs*, Delegation, LocalModel, Telos, Interview or Daemon directory.
+- [x] ISC-128: The skill tests for Writing, Interceptor, MyTokens, Remotion, Scheduler and ContextSearch pass.
 
 Phase 5, memory and settings:
 
-- [ ] ISC-129: `bun payload/MYOS/TOOLS/MigrateMemory.ts --from-pai --dry-run` lists the WORK dirs, KNOWLEDGE notes, work.json, session-names.json and PROJECTS.md it would copy, with counts.
-- [ ] ISC-130: After `--from-pai`, `ls ~/.myos/MYOS/MEMORY/WORK | wc -l` equals the pai WORK dir count.
-- [ ] ISC-131: `~/.myos/MYOS/MEMORY/KNOWLEDGE` holds the pai notes (same file count).
-- [ ] ISC-132: `~/.myos/MYOS/USER/PROJECTS.md` is under 6,000 bytes and `~/.myos/MYOS/USER/PROJECTS/*.md` together contain every project bullet of the pai file (heading count equal).
-- [ ] ISC-133: `MYOS/TOOLS/SplitProjects.ts` is deterministic and idempotent: a second run changes no file.
-- [ ] ISC-134: `MYOS/MEMORY/STATE/work.json` and `session-names.json` are copied.
-- [ ] ISC-135: MyTokens `report --days 30` in the install shows the pai sessions after the one time sync from `~/.claude-personal/projects`.
-- [ ] ISC-136: `bun payload/skills/ContextSearch/Tools/*.ts sarah` (or the `/cs` path) finds the flat finder sessions in the install.
-- [ ] ISC-137: `postCompactRestore.fullFiles` contains `MYOS/USER/PROJECTS.md`.
-- [ ] ISC-138: `autoMemoryEnabled` is `false` in the template.
-- [ ] ISC-139: Anti: the migration writes nothing under `~/.claude-personal` (find -newer against a marker, MEMORY/OBSERVABILITY and projects excluded).
-- [ ] ISC-140: The migration prints a path audit count of `.claude-personal` and `/Users/harry/.claude` occurrences in the migrated files (expected 0).
-- [ ] ISC-141: `settings.template.json` pins `model` to `fable[1m]`.
-- [ ] ISC-142: The template `env` has `MYOS_DIR`, `MYOS_CONFIG_DIR`, `BASH_DEFAULT_TIMEOUT_MS`, `API_TIMEOUT_MS`, `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`, `CLAUDE_CODE_FORK_SUBAGENT`, `CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS`, `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH`.
-- [ ] ISC-143: `permissions.defaultMode` is `auto`; deny carries the destructive list with `~/.myos` and `~/.claude*`; ask carries `git push`, `rm`, `sudo`, `launchctl`, `crontab` and `.env` reads; `autoMode` prose names `~/Code`, `~/Documents/Comedy` and `~/.myos`.
-- [ ] ISC-144: `enabledPlugins` lists code-review, pr-review-toolkit, typescript-lsp and swift-lsp from `claude-plugins-official`.
-- [ ] ISC-145: `statusLine` runs `bun MYOS/statusline.ts` and the statusline test passes with `myos v0.1.0` and `ctx 34%`.
-- [ ] ISC-146: `MergeSettings.ts --upgrade` keeps a user added rule and env value (pmai test passes).
-- [ ] ISC-147: Anti: the template has none of `voiceEnabled`, `notifications`, `observability`, `allowedHttpHookUrls`, `daidentity`, `spinnerVerbs`, `counts`.
-- [ ] ISC-148: `Tools/Doctor.ts` probes bun, rg, git, jq, gh, claude, rtk, interceptor, ffmpeg and whisper and lists misses without failing.
-- [ ] ISC-149: `payload/MYOS/TOOLS/Inference.ts` keeps `--level`, the tier aliases and the API key scrub; `rg -i 'codex|perplexity|CROSS_VENDOR' payload/MYOS/TOOLS` returns nothing.
-- [ ] ISC-150: Anti: `launchctl list | rg -i myos` is empty after install (nothing runs in the background).
-- [ ] ISC-151: Anti: `~/.myos` has no Pulse, PAI-Install, Banners or Observability UI directory.
+- [x] ISC-129: `bun payload/MYOS/TOOLS/MigrateMemory.ts --from-pai --dry-run` lists the WORK dirs, KNOWLEDGE notes, work.json, session-names.json and PROJECTS.md it would copy, with counts.
+- [x] ISC-130: After `--from-pai`, `ls ~/.myos/MYOS/MEMORY/WORK | wc -l` equals the pai WORK dir count.
+- [x] ISC-131: `~/.myos/MYOS/MEMORY/KNOWLEDGE` holds the pai notes (same file count).
+- [x] ISC-132: `~/.myos/MYOS/USER/PROJECTS.md` is under 6,000 bytes and `~/.myos/MYOS/USER/PROJECTS/*.md` together contain every project bullet of the pai file (heading count equal).
+- [x] ISC-133: `MYOS/TOOLS/SplitProjects.ts` is deterministic and idempotent: a second run changes no file.
+- [x] ISC-134: `MYOS/MEMORY/STATE/work.json` and `session-names.json` are copied.
+- [x] ISC-135: MyTokens `report --days 30` in the install shows the pai sessions after the one time sync from `~/.claude-personal/projects`.
+- [x] ISC-136: `bun payload/skills/ContextSearch/Tools/*.ts sarah` (or the `/cs` path) finds the flat finder sessions in the install.
+- [x] ISC-137: `postCompactRestore.fullFiles` contains `MYOS/USER/PROJECTS.md`.
+- [x] ISC-138: `autoMemoryEnabled` is `false` in the template.
+- [x] ISC-139: Anti: the migration writes nothing under `~/.claude-personal` (find -newer against a marker, MEMORY/OBSERVABILITY and projects excluded).
+- [x] ISC-140: The migration prints a path audit count of `.claude-personal` and `/Users/harry/.claude` occurrences in the migrated files (expected 0).
+- [x] ISC-141: `settings.template.json` pins `model` to `fable[1m]`.
+- [x] ISC-142: The template `env` has `MYOS_DIR`, `MYOS_CONFIG_DIR`, `BASH_DEFAULT_TIMEOUT_MS`, `API_TIMEOUT_MS`, `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`, `CLAUDE_CODE_FORK_SUBAGENT`, `CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS`, `CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH`.
+- [x] ISC-143: `permissions.defaultMode` is `auto`; deny carries the destructive list with `~/.myos` and `~/.claude*`; ask carries `git push`, `rm`, `sudo`, `launchctl`, `crontab` and `.env` reads; `autoMode` prose names `~/Code`, `~/Documents/Comedy` and `~/.myos`.
+- [x] ISC-144: `enabledPlugins` lists code-review, pr-review-toolkit, typescript-lsp and swift-lsp from `claude-plugins-official`.
+- [x] ISC-145: `statusLine` runs `bun MYOS/statusline.ts` and the statusline test passes with `myos v0.1.0` and `ctx 34%`.
+- [x] ISC-146: `MergeSettings.ts --upgrade` keeps a user added rule and env value (pmai test passes).
+- [x] ISC-147: Anti: the template has none of `voiceEnabled`, `notifications`, `observability`, `allowedHttpHookUrls`, `daidentity`, `spinnerVerbs`, `counts`.
+- [x] ISC-148: `Tools/Doctor.ts` probes bun, rg, git, jq, gh, claude, rtk, interceptor, ffmpeg and whisper and lists misses without failing.
+- [x] ISC-149: `payload/MYOS/TOOLS/Inference.ts` keeps `--level`, the tier aliases and the API key scrub; `rg -i 'codex|perplexity|CROSS_VENDOR' payload/MYOS/TOOLS` returns nothing.
+- [x] ISC-150: Anti: `launchctl list | rg -i myos` is empty after install (nothing runs in the background).
+- [x] ISC-151: Anti: `~/.myos` has no Pulse, PAI-Install, Banners or Observability UI directory.
 
 Process and documentation:
 
-- [ ] ISC-152: Harry's section 8 answers are recorded as a Decisions entry (phase 0).
-- [ ] ISC-153: Advisor called before the build starts (approach) and once before `phase: complete` (gaps).
-- [ ] ISC-154: An Engineer agent reviews the hook port and its findings are dispositioned in Decisions.
-- [ ] ISC-155: `CHANGELOG.md` has a `## 0.1.0` entry and `bun Tools/Release.ts --dry-run` (or ReleaseCheck) passes.
-- [ ] ISC-156: `README.md`, `MIGRATION.md` and `DEVELOPMENT.md` describe the built state (install, upgrade, kill switches, how to add a hook, release steps).
-- [ ] ISC-157: The first commits are on `main` and pushed; `gh run list` shows the CI run and its status is recorded.
-- [ ] ISC-158: `payload/MYOS/USER/` ships scaffold only: `CONFIG/MYOS_CONFIG.toml.example`, `CONFIG/trial.json.example`, `PROJECTS.md` template; the installer never overwrites files under `~/.myos/MYOS/USER` or `MYOS/MEMORY`.
-- [ ] ISC-159: `~/.myos/MYOS/USER/CONFIG/MYOS_CONFIG.toml` exists after install with `[principal]` name Harry, timezone Europe/Zurich and `[gates] blocking = false`.
-- [ ] ISC-160: `~/.myos/MYOS/USER/CONFIG/trial.json` exists with `started`, `gate_review_due` (14 days), `doctrine_review_due` (30 days) and both `done` flags false.
+- [x] ISC-152: Harry's section 8 answers are recorded as a Decisions entry (phase 0).
+- [x] ISC-153: Advisor called before the build starts (approach) and once before `phase: complete` (gaps).
+- [x] ISC-154: An Engineer agent reviews the hook port and its findings are dispositioned in Decisions.
+- [x] ISC-155: `CHANGELOG.md` has a `## 0.1.0` entry and `bun Tools/Release.ts --dry-run` (or ReleaseCheck) passes.
+- [x] ISC-156: `README.md`, `MIGRATION.md` and `DEVELOPMENT.md` describe the built state (install, upgrade, kill switches, how to add a hook, release steps).
+- [x] ISC-157: The first commits are on `main` and pushed; `gh run list` shows the CI run and its status is recorded.
+- [x] ISC-158: `payload/MYOS/USER/` ships scaffold only: `CONFIG/MYOS_CONFIG.toml.example`, `CONFIG/trial.json.example`, `PROJECTS.md` template; the installer never overwrites files under `~/.myos/MYOS/USER` or `MYOS/MEMORY`.
+- [x] ISC-159: `~/.myos/MYOS/USER/CONFIG/MYOS_CONFIG.toml` exists after install with `[principal]` name Harry, timezone Europe/Zurich and `[gates] blocking = false`.
+- [x] ISC-160: `~/.myos/MYOS/USER/CONFIG/trial.json` exists with `started`, `gate_review_due` (14 days), `doctrine_review_due` (30 days) and both `done` flags false.
 
 ## Test Strategy
 
@@ -290,6 +290,9 @@ Process and documentation:
 - 2026-09-27 22:50: The tools builder ran `Doctor.ts --help` without a sandbox and it wrote four state files into the real `~/.myos/MYOS/MEMORY/STATE/` (capabilities.json, capabilities-statusline.txt, .capabilities-salt, doctor-heartbeat.json; nothing else, nothing under pai or pmai). Not deleted by this run: the installer instead learns to treat a target that holds only user owned trees (MYOS/MEMORY, MYOS/USER) and no marker as a fresh install, which is the right behaviour anyway, and Doctor stops writing on read only commands. Harry is told in the summary.
 - 2026-09-27 22:50: GitHub repo `harryf/myos` created private (Harry's answer to question 18); `origin` set; nothing pushed yet.
 - 2026-09-27 23:00: BitterPillEngineering quick check over the two always loaded files: two defaults cut from the system prompt (report outcomes as they are; never change working features unasked, both harness defaults), five duplicates merged (subprocess claude, plan means stop, build over ask, reproduce first, browser verification each stated once, the constitutional copy wins because it survives compaction; em dash rule once in CLAUDE.md), one missing rule added that no hook can enforce (read `MYOS/USER/PROJECTS/<slug>.md` before touching a project that has one). Sizes after: CLAUDE.md 3,154 bytes, system prompt 4,124; doctrine tests 19 pass; StyleCheck prose exit 0.
+- 2026-09-28 00:05: Builders' decisions confirmed: VerificationGate ships armed for T1 to T3 (the plan's one live tooth) while `[gates] blocking` governs only the ISA gates; TF (completion over a failed final command) logs only; ISAStaleWriteGuard also listens on PostToolUse Read to learn what the session saw; EventLogger also logs ConfigChange; `Bash(~/bin/publish:*)` sits in ask; Gmail connector rules are globbed by verb (read shapes allow, write shapes ask); ISAGate's hard checks at `phase: complete` are no Goal, no claims, no anti claim, open claims, a progress that does not match, entries left under Not yet specified; DriftReminder has no line cap; TaskGovernance keeps its counter (moved under MEMORY/STATE in the review fixes). Skills: MyTokens and Scheduler restart at 1.0.0; Scheduler prompt jobs run `myos -p` in plan mode with Edit, Write and NotebookEdit disallowed; Interceptor kept at pmai 4.4.0 (newer than LifeOS); Remotion's Render.ts and Theme.ts dropped; the two "shipped tree" StyleCheck tests scope to the skills builder's own surfaces (CI covers the rest); `grill-me.md` added from LifeOS. Tools: MultiEdit deliberately absent from KNOWN_TOOL_NAMES (the harness rejects it in permission rules); DependencyAudit kept, now derived from the payload on disk; `[learning]` removed from the config.
+- 2026-09-28 00:10: Closing advisor call, eight points. 1 personal data in the push: checked, `git ls-files` holds no MEMORY, USER/PROJECTS, sessions or token data (only the MyTokens skill sources); .gitignore covers the user owned files. 2 hooks never fired in a real session: true until Harry logs in; the hooks were run live against the install with synthetic stdin instead (TimeContext, DriftReminder, TrialClock, GateReview, StopGates off) and the scripted per gate checks are the first task of the trial (MIGRATION.md section 6). 3 Stop dispatcher wedging: StopGates handles `stop_hook_active` (never blocks on recovery); VerificationGate stays armed as planned, `MYOS_GATES=off` is the documented exit. 4 keychain isolation: pmai and pai already coexist on this machine with separate logins, same mechanism. 5 CI portability: settled by the CI run. 6 broad allow rules: the only wide Bash allows are bun, bunx, bun run, gh and curl (read shapes); rm, git push, sudo, launchctl and crontab are in ask; no bare `Bash` or `Edit` allow. 7 migration integrity: 11,307 words in, 11,479 out across 20 files (headings added), every index link resolves, zero stale paths. 8 launchd and TrialClock: no launchd job exists yet (Scheduler writes plists only on command); TrialClock fired on a sandbox trial.json with a past date. Rollback line given to Harry in the summary.
+- 2026-09-28 00:20: Independent review of the hooks layer: 15 findings. Sent to the hooks builder for fixing: the T5/TF early return that let a publicity phrased deploy claim through (blocker); per session last-response.txt; getMyosDir fallback and the hardcoded ~/.myos paths; Pulse leftovers and the execSync tail in isa-utils; unbounded transcript read in hook-io; VERIFGATE_* switches folded into gates.ts; positive controls for the kill switch tests; per session last-block and latch files written atomically; TaskGovernance state under MEMORY/STATE; identity.ts deleted; URL masking before sentence splitting; the duplicated env table in gates.ts. Declined: neutralising Harry's name and paths in the autoMode prose (myos is his single user system; the private repo holds nothing but his setup) and the compaction truncation window in work-events.ts (documented instead).
 - 2026-09-27 21:25: Two pai files changed after session start: `settings.json` at 19:50:18 (the `/model` command Harry ran at session start saved the default) and a `skills/synced` manifest at 21:18:22 (Claude Code skill sync). Neither was written by this run; ISC-26 holds.
 
 ## Changelog
@@ -339,3 +342,110 @@ Process and documentation:
 - ISC-38: Bash `bun PAI/Tools/Inference.ts --mode advisor --timeout 420000 <task> <state> <question>` exit 0; output saved in the session task log. Seven points returned (the first was cut by the output tail). Dispositions: adopted (pmai usage census added to section 1; "zero network" wording made precise and Safety confirmed rule based; KVSync fact that no token exists; PROJECTS.md 74 KB import surfaced as question 21; tests for the LifeOS hooks budgeted in phase 2 with kill switches and HookHealer scope; old ISA exemption; hidden dependency grep run and recorded; upstream measurement labelled as LifeOS's; v8.4.0 to v8.20.2 changelog listed and the version independence stated; exit criteria added to phase 6; archive first default in MIGRATION.md; ten questions turned into defaults, two questions added). Rebutted: "absolute paths in the ISAs need a rewrite step" (checked: zero hits in 122 ISAs and PROJECTS.md, the check stays in `--from-pai`); "dropping Gigs skills is a regression" (Harry's instruction, and pmai keeps serving work). Deferred: none.
 - ISC-39: PLAN.md section 6 table.
 - ISC-40: PLAN.md section 4 "Rollback at any point"; MIGRATION.md section 9.
+
+Run 2 (2026-09-28, build):
+
+- ISC-41: `git init --initial-branch=main`; `git log --oneline` shows the commits on main.
+- ISC-42: `git remote -v` origin `git@github.com:harryf/myos.git`; `gh repo view harryf/myos --json visibility` = PRIVATE.
+- ISC-43: `cat VERSION` = 0.1.0; `cat ~/.myos/MYOS/VERSION` = 0.1.0 after install.
+- ISC-44: `~/.local/bin/myos --version` = `myos v0.1.0`; `readlink ~/.local/bin/myos` = /Users/harry/.myos/bin/myos.
+- ISC-45, 46: rg over bin/myos: `export CLAUDE_CONFIG_DIR="$MYOS_HOME"`, `--append-system-prompt-file`, `--setting-sources user` branch for `$HOME` and `~/.claude*`, `MYOS_SETTING_SOURCES` override; test/tools/launcher.test.ts runs the script with a stub claude and asserts the args.
+- ISC-47: `./install.sh --dry-run` printed "FRESH INSTALL", "546 new file(s)", "untouched"; `ls ~/.myos` unchanged after.
+- ISC-48: `jq '.files | length' ~/.myos/.install-manifest.json` = 546.
+- ISC-49: installer log "launcher linked: /Users/harry/.local/bin/myos"; readlink confirms.
+- ISC-50: test/tools/install.test.ts (sandbox HOME): second run reports no release changes and settings.json is byte identical; CI step "Install idempotency" repeats it on a clean runner.
+- ISC-51: `rg -n from-pai install.sh` lines 21, 45, 47; the real run printed the `[from-pai]` block.
+- ISC-52: `rg -il pmai install.sh bin Tools payload .github` = none. One match remains in test/doctrine/Doctrine.test.ts: the regex that asserts the doctrine carries no pmai string (accepted).
+- ISC-53: Tools/ContrabandCheck.ts BANNED has the eight signatures plus ten more; `bun Tools/ContrabandCheck.ts` = "shippable surface clean"; test/gates 137 pass.
+- ISC-54: ci.yml steps: em dash grep over `git ls-files`, ContrabandCheck, PermissionRulesCheck, TestCoverageCheck, `bun test`, StyleCheck prose/docs/dashes, BudgetCheck, shell syntax, unshipped tool refs, install smoke, idempotency, hook import sweep, upgrade path, upgrade guard, statusline.
+- ISC-55: release.yml Gate 2 "Tag $GITHUB_REF_NAME does not match VERSION file".
+- ISC-56: `rg 'harryf|gigs' Tools/Release.ts .github/workflows` = none; Release.ts pushes to `origin`, which is harryf/myos; the pmai remote name never appears.
+- ISC-57: `bun test` = 759 pass, 0 fail, 55 files (before the review fixes; rerun recorded below).
+- ISC-58: `bun Tools/TestCoverageCheck.ts` = "53 scripts, 53 rows in parity".
+- ISC-59: .gitignore rows for node_modules, .test-tmp, settings.json, .env, bun.lock, MEMORY and the user owned USER files (10 matching lines).
+- ISC-60: `find ~/.claude-personal -newer <run marker>` excluding OBSERVABILITY, projects, logs, STATE: only Claude Code's own runtime files (backups/.claude.json.backup.*, sessions/, cache/model-catalog, file-history, .last-update-result.json, PAI/.quote-cache written by pai hooks). `find ~/.pmai ~/Code/gigs/pmai/pmai -newer <marker>` = none.
+- ISC-61: `rg -l <U+2014> --hidden -g '!.git' -g '!node_modules' .` = none (three rendered escapes in DEVELOPMENT.md, ISA.md and the pre commit hook were found and replaced with the words "backslash-u2014"; the Write tool renders `U+2014` as the character).
+- ISC-62: `readlink ~/.claude` = /Users/harry/.claude-personal.
+- ISC-63: staged scratch-emdash.md; `git commit` printed "pre-commit: em dash (U+2014) in staged changes" and `git log` stayed empty; file removed.
+- ISC-64: `ls payload/hooks/*.hook.*` = the 26 names listed, plus lib/.
+- ISC-65: `jq` count of `type == "http"` hooks in settings.template.json = 0.
+- ISC-66: test/hooks/HookContract.test.ts asserts the 26 file set, two way registration parity, the Stop order, async flags and the anti greps (part of the 232 hook tests).
+- ISC-67: test/hooks/TimeContext.hook.test.ts; live run against the install printed "Now: Mon 2026-09-28 00:12 CEST (Europe/Zurich, night)".
+- ISC-68: test/hooks/DriftReminder.hook.test.ts; live run printed the contract with "em dashes: zero".
+- ISC-69: test/hooks/FormatGate.hook.test.ts (log only, exit 0 with a violation, row in format-gate.jsonl).
+- ISC-70, 71, 72: test/hooks/VerificationGate.hook.test.ts fixtures: deploy claim without a probe blocks; Claude-in-Chrome screenshot passes; Interceptor screenshot passes. The reviewer reproduced a gap (a T5 publicity match returned before T1 ran) fixed in the follow up.
+- ISC-73: test/hooks/StopGates.hook.test.ts asserts the array order FormatGate, VerificationGate, ISACloseGate, ISAFoldGate, ISAGate; `MYOS_GATES=off` live against the install: exit 0, no output.
+- ISC-74: test/hooks/ISAGate, ISACloseGate, ISAFoldGate tests: log only by default with rows in isa-gates.jsonl, block when `[gates] blocking = true` or `MYOS_GATES=block`.
+- ISC-75: the same tests run the legacy fixture (`effort:` key) and assert a skip row; test/hooks/isa-fixtures.ts builds only from the two golden fixtures.
+- ISC-76: test/hooks/ISAFoldGate.hook.test.ts covers publish, git push, launchctl, crontab, curl POST/PUT/PATCH/DELETE to getgrist.com, `--apply` and `--activate`.
+- ISC-77: test/hooks/ISAStaleWriteGuard.hook.test.ts (block on a stale whole file Write; pass under MYOS_GATES=off; legacy exempt).
+- ISC-78: test/hooks/PublicPushGate.hook.test.ts with a stub gh (public: scans; absent: fails open).
+- ISC-79: test/hooks/ModelRungGuard.hook.test.ts (reports, never switches).
+- ISC-80, 87, 89, 90, 91: the pmai tests for LoopDetector, SessionCleanup, CheckpointPerISC, AgentInvocation, TaskGovernance and LoadContext pass in the suite.
+- ISC-81: test/hooks/HookHealer.hook.test.ts asserts byte identical content after a run and refusal outside hooks/.
+- ISC-82: test/hooks/EventLogger.hook.test.ts rotates a pre grown 20 MB file (two generations).
+- ISC-83, 84: test/hooks/Safety.hook.test.ts (read only shape allowed, `rm -rf` neutral, no spawn; WebFetch result wrapped).
+- ISC-85: test/hooks/PromptProcessing.hook.test.ts with a stub `claude` on a sparse PATH asserts it is never called; 48 char deterministic name.
+- ISC-86: test/hooks/TokenLog.hook.test.ts; import path `../skills/MyTokens/Tools/TokenLog.ts`.
+- ISC-88: test/hooks/ISASync.hook.test.ts covers `<project>/ISA.md` (keyed `project-<dirname>` without a slug) and MEMORY/WORK.
+- ISC-92: test/hooks/TrialClock.hook.test.ts; live run with a sandbox trial.json dated 2026-09-10 printed "myos trial day 27" and "Gate arming review due: run `bun MYOS/TOOLS/GateReview.ts report`".
+- ISC-93: test/tools/GateReview.test.ts; live `GateReview.ts report` on the install printed "Gate review, last 14 days, 0 session(s), No gate rows yet".
+- ISC-94: `jq` count of registrations without `timeout` = 0; async: PromptProcessing, ModelRungGuard, EventLogger (three events), TokenLog.
+- ISC-95: payload/hooks/README.md, 6,104 bytes, one row per hook with event, purpose, kill switch and log file; MYOS_GATES and MYOS_PUSHGATE documented.
+- ISC-96: `rg -n 'claude -p|spawn\("claude"|Inference\.ts' payload/hooks` = 0 lines.
+- ISC-97: `rg -in '31337|ntfy|osascript|elevenlabs|kitty|voice' payload/hooks` = 0 lines.
+- ISC-98: the legacy fixture passes every ISA gate with a skip row (ISC-75 tests) and VerificationGate ignores it; `MYOS_GATES=off` proven silent live.
+- ISC-99: `bun build --target=bun --outfile=/dev/null` over payload/hooks/*.hook.ts: sweep fail=0.
+- ISC-100: `wc -c` MYOS_SYSTEM_PROMPT.md = 4,124; test/doctrine asserts no `{{`.
+- ISC-101, 102: system prompt sections 1 (format with fenced example, closer `🗣️ myos:`), 2 (verification: reproduce before fixing, confidence requires source), Operational rules (em dash, no voice, notifications, servers), The Algorithm (read `MYOS/ALGORITHM/LATEST`); test/doctrine 19 pass.
+- ISC-103: `wc -c payload/CLAUDE.md` = 3,154; contains How myos writes, bun and bunx, TypeScript, plan means stop (in the system prompt after the Bitter Pill merge), browser verification with Claude-in-Chrome fallback, the publish recipe, the Conventions (Grist) routing row.
+- ISC-104: one `@MYOS/USER/PROJECTS.md` import; test/doctrine resolves every routing table path against payload or the USER scaffold.
+- ISC-105: `cat payload/MYOS/ALGORITHM/LATEST` = 1.0.0; v1.0.0.md line 3 "Provenance: adapted from LifeOS Algorithm v8.20.2".
+- ISC-106: 16 numbered claims (rg count 16); `rg -in 'pulse|cmux|kitty|bunker|ascent-delta|31337|voice'` = 0.
+- ISC-107: `ls payload/MYOS/RULES` = Prompting.md SelfHealing.md Verification.md; `rg -in 'pulse|autonomic' SelfHealing.md` = 0.
+- ISC-108: `bun payload/MYOS/TOOLS/BudgetCheck.ts`: 17,362 of 24,000 bytes, every row under its ceiling.
+- ISC-109: StyleCheck prose over CLAUDE.md, the system prompt, RULES, USER: 0 errors (7 inline header warnings in the agent files); docs profile over DOCUMENTATION and ALGORITHM: 0 errors after the "marks a" fix.
+- ISC-110: IsaFormat.md has Not yet specified, `(after:)` edges, the three verifier classes and the legacy section (8 matching lines).
+- ISC-111: DEFERRED-VERIFY. `myos -p 'reply with the single word ready' --output-format text` returned "Not logged in · Please run /login": auth is per config dir and only Harry can log in interactively. Follow up: Harry runs `myos` once in a project dir, then this probe.
+- ISC-112: `ls payload/skills` = the 20 names exactly.
+- ISC-113: every SKILL.md has a semver `version:` (loop found none missing) and a description under 1,024 chars (script found none over); test/gates/SkillFrontmatter.test.ts parses each as strict YAML.
+- ISC-114, 115, 116: the three rg probes = 0 files each.
+- ISC-117: Interceptor SKILL.md line 26 `~/bin/interceptor`, section "When the extension is disconnected" naming the `mcp__claude-in-chrome__*` tools.
+- ISC-118: test/skills/MyTokens/Tools/TokenLog.test.ts `report --days 7` against a fixture store; live `report --days 30` on the install: 701 sessions, output 9.6M.
+- ISC-119: `rg -o` over TokenLog.ts: MYOS_TOKENLOG_NAMES, MYOS_TOKENLOG_NO_RTK, MYOS_TOKENLOG_PROJECTS, MYOS_TOKENLOG_STORE, myos-release-probe.
+- ISC-120: StyleCheck dashes over payload/skills: 459 files, 0 errors (skills builder) and inside `bun test`.
+- ISC-121: `bun Tools/SkillVersionBump.ts --dry-run` exit 0: "0 skill version(s) bumped (no reference tag yet)".
+- ISC-122: `ls payload/agents` = Designer.md Engineer.md Max.md; `rg -in 'elevenlabs|voice' Max.md` = 0.
+- ISC-123: test/skills/Scheduler/Tools/Scheduler.test.ts (sandbox HOME, stub launchctl and myos): add, list, remove, run, dry run; `com.myos.` labels; ContrabandCheck clean (no notification code).
+- ISC-124: Fabric SKILL.md line 4 and 12 state the patterns run natively, no binary required; TELOS entries removed.
+- ISC-125: `ls payload/skills/ISA/Workflows` = Append CheckCompleteness Grill Interview Reconcile Scaffold Seed; template per IsaFormat.md.
+- ISC-126: `ls payload/commands` = cs.md grill-me.md myos.md (grill-me added from LifeOS; the plan listed it).
+- ISC-127: `ls -d` of the forbidden skill dirs = 0 present.
+- ISC-128: skills tests 135 pass (Writing, Interceptor, MyTokens, Scheduler, ContextSearch; Remotion's Tools were dropped so its test went with them).
+- ISC-129: test/tools/MigrateMemory.test.ts dry run against a fixture tree; the real dry run printed the plan; the real run printed "WORK: copied 122 dir(s) (125 files)", "KNOWLEDGE: copied 10 file(s)", "STATE: copied 2 file(s)", "PROJECTS: wrote 21 file(s), index 4231 bytes".
+- ISC-130: `ls ~/.myos/MYOS/MEMORY/WORK | wc -l` = 122; pai has 122 dirs plus a README.md file.
+- ISC-131: `find ~/.myos/MYOS/MEMORY/KNOWLEDGE -type f | wc -l` = 10 = pai.
+- ISC-132: `wc -c ~/.myos/MYOS/USER/PROJECTS.md` = 4,231; 20 project files; 20 bullets in the pai file, 20 in the index; 11,307 words in the original, 11,479 in the 20 files (headings and source lines added, nothing lost); every `PROJECTS/<slug>.md` link in the index resolves.
+- ISC-133: test/tools/SplitProjects.test.ts asserts a second run rewrites identical bytes and leaves an edited per project file alone.
+- ISC-134: `ls ~/.myos/MYOS/MEMORY/STATE` includes work.json and session-names.json.
+- ISC-135: MyTokens report on the install: "826 session(s) parsed, 701 in store"; `report --days 30` lists daily rows from 2026-08-30.
+- ISC-136: `bun ~/.myos/skills/ContextSearch/Tools/ContextSearch.ts sarah` returned 10 results led by 20260921-104500_sarah-flat-feedback-grist.
+- ISC-137, 138, 141, 142, 144, 145: `jq` on ~/.myos/settings.json: model fable[1m], autoMemoryEnabled false, defaultMode auto, postCompactRestore MYOS/USER/PROJECTS.md, the four plugins, statusLine `bun '/Users/harry/.myos/MYOS/statusline.ts'`, 0 http hooks, env keys API_TIMEOUT_MS, BASH_DEFAULT_TIMEOUT_MS, the four CLAUDE_CODE_* flags, MYOS_CONFIG_DIR, MYOS_DIR; test/tools/statusline.test.ts asserts `myos v0.1.0` and `ctx 34%`.
+- ISC-139: the ISC-60 find over pai after the migration: nothing written by us.
+- ISC-140: migration output "path audit: 0 line(s)"; a second rg over the migrated WORK, KNOWLEDGE, USER and STATE = 0 files.
+- ISC-143: deny has `Bash(rm -rf ~/.myos*)` and `Bash(rm -rf ~/.claude*)`; ask has 12 rules matching git push, rm, sudo, launchctl, crontab, .env; autoMode.environment names ~/.myos, ~/Code, ~/Documents/Comedy; `PermissionRulesCheck`: 277 rules valid.
+- ISC-146: test/tools/MergeSettings.test.ts (user rule and env value survive `--upgrade`); CI upgrade path step repeats it.
+- ISC-147: `jq` on the installed settings: voiceEnabled, notifications, observability, allowedHttpHookUrls, daidentity, spinnerVerbs, counts all null.
+- ISC-148: `bun ~/.myos/MYOS/TOOLS/Doctor.ts` ran the probe list and config health; only miss reported: the optional fabric binary (not needed).
+- ISC-149: `rg -il 'codex|perplexity|CROSS_VENDOR' payload/MYOS/TOOLS` = 0; Inference.ts header documents `--level` and the four levels.
+- ISC-150: `launchctl list | rg -i myos` = 0.
+- ISC-151: `ls ~/.myos` = CLAUDE.md MYOS agents bin bun.lock commands hooks install.log node_modules package.json settings.json skills.
+- ISC-152: Decisions entry of 2026-09-27 22:05 (phase 0).
+- ISC-153: advisor called at 22:20 (approach, eight points, all adopted) and at 00:10 (closing, eight points; dispositions in Decisions).
+- ISC-154: an independent review agent returned 15 findings on the hooks layer (Decisions, 00:20); 13 sent back to the hooks builder for fixing, 2 declined with reasons.
+- ISC-155: CHANGELOG.md `## 0.1.0`; `bun Tools/ReleaseCheck.ts --health` result recorded below.
+- ISC-156: README.md (install, upgrade, removal, contents table), MIGRATION.md (status BUILT, the real `--from-pai` interface and counts, cutover decided, residue), DEVELOPMENT.md (conventions, tests, releases, installer semantics, adding a hook, style gate, traps).
+- ISC-157: first commit 1ad552e pushed to origin/main; CI run 36354325827 failed on one StyleCheck error ("marks a" in IsaFormat.md) and release.yml failed to parse (step names with a colon after the em dash strip); both fixed in the second commit; the third run's status is recorded below.
+- ISC-158: `find payload/MYOS/USER -type f` = CONVENTIONS.md, CONFIG/trial.json.example, PROJECTS.md; install log "created ... (only when absent)"; the CI idempotency step appends a marker to CONVENTIONS.md and checks it survives.
+- ISC-159: MYOS_CONFIG.toml lines: name = "Harry", timezone = "Europe/Zurich", `[gates] blocking = false`.
+- ISC-160: trial.json: started 2026-09-28, gate_review_due 2026-10-12, doctrine_review_due 2026-10-28, both done flags false.

@@ -289,7 +289,7 @@ async function checkActiveProgress(myosDir: string): Promise<string | null> {
   }
 
   if (projects.length > 0) {
-    summary += '\n  ── Tracked Projects ──\n';
+    summary += '\n  ── Tracked projects ──\n';
     for (const proj of projects) {
       const staleTag = proj.stale ? ' ⚠️ STALE (>14d)' : '';
       summary += `\n  ${proj.stale ? '🟡' : '🔵'} ${proj.name}${staleTag}\n`;

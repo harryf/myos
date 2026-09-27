@@ -5,12 +5,12 @@
  */
 import { describe, expect, test } from "bun:test";
 
-import { assistantToolUse, events, myosHome, runHook, toolResult, transcript, userText } from "./harness.ts";
+import { assistantToolUse, events, myosHome, runHook, SESSION_ID, toolResult, transcript, userText } from "./harness.ts";
 import { bindIsa, busyWork, CURRENT, LEGACY } from "./isa-fixtures.ts";
 
 const HOOK = "payload/hooks/ISACloseGate.hook.ts";
 const LOG = ".myos/MYOS/MEMORY/OBSERVABILITY/isa-gates.jsonl";
-const LATCH = ".myos/MYOS/MEMORY/STATE/isa-close-gate-blocked.json";
+const LATCH = `.myos/MYOS/MEMORY/STATE/isa-close-gate-blocked/${SESSION_ID}.json`;
 type Home = ReturnType<typeof myosHome>;
 
 const rows = async (home: Home) =>
@@ -49,6 +49,7 @@ describe("the gate", () => {
     const second = await runHook(HOOK, { home, stdin, env: { MYOS_GATES: "block" } });
     expect(second.exitCode).toBe(0);
     expect((await rows(home)).at(-1).decision).toBe("pass-dedupe");
+    expect(await Bun.file(home.join(LATCH)).exists()).toBe(true);
   });
 
   test("a reply that addresses the ISA passes", async () => {

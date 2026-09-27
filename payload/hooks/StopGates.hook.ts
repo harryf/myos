@@ -13,10 +13,11 @@
  *
  * MYOS_GATES=off: exit 0 with empty stdout before reading anything.
  */
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { dirname } from "node:path";
+import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { blockDecision, gateLog, gatesOff, type GateOutcome } from "./lib/gates";
 import { readHookInput } from "./lib/hook-io";
+import { safeSessionId } from "./lib/latch";
 import { myosPath } from "./lib/paths";
 import { buildContext, type GateRun } from "./lib/stop-context";
 import * as formatGate from "./FormatGate.hook";
@@ -29,20 +30,24 @@ interface GateModule { GATE: string; LOG_FILE: string; run: GateRun }
 
 export const GATES: GateModule[] = [formatGate, verificationGate, isaCloseGate, isaFoldGate, isaGate];
 
-const lastBlockPath = () => myosPath("MEMORY", "STATE", "stop-gates-last-block.json");
+const lastBlockPath = (session: string) =>
+  join(myosPath("MEMORY", "STATE", "stop-gates-last-block"), `${safeSessionId(session)}.json`);
 
 function rememberBlock(session: string, gate: string): void {
   try {
-    mkdirSync(dirname(lastBlockPath()), { recursive: true });
-    writeFileSync(lastBlockPath(), JSON.stringify({ session, gate }));
+    const p = lastBlockPath(session);
+    mkdirSync(dirname(p), { recursive: true });
+    writeFileSync(`${p}.tmp`, JSON.stringify({ session, gate }));
+    renameSync(`${p}.tmp`, p);
   } catch { /* best effort */ }
 }
 
 function takeLastBlock(session: string): string | null {
   try {
-    if (!existsSync(lastBlockPath())) return null;
-    const rec = JSON.parse(readFileSync(lastBlockPath(), "utf8"));
-    rmSync(lastBlockPath(), { force: true });
+    const p = lastBlockPath(session);
+    if (!existsSync(p)) return null;
+    const rec = JSON.parse(readFileSync(p, "utf8"));
+    rmSync(p, { force: true });
     return rec?.session === session ? String(rec.gate) : null;
   } catch {
     return null;

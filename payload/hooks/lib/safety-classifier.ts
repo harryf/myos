@@ -1,5 +1,6 @@
 import { homedir } from "node:os";
 import { resolve } from "node:path";
+import { getClaudeDir } from "./paths";
 
 export type Decision = "allow" | "neutral";
 
@@ -32,7 +33,7 @@ export interface ToolCall {
 const HOME = homedir();
 
 export const TRUSTED_PREFIXES: readonly string[] = [
-  resolve(HOME, ".myos"),
+  resolve(getClaudeDir()),
   resolve(HOME, "Code"),
   resolve(HOME, "Documents"),
   resolve(HOME, "Downloads"),

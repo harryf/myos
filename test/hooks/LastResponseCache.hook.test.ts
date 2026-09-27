@@ -7,10 +7,11 @@
 
 import { describe, expect, test } from "bun:test";
 
-import { assistantText, events, myosHome, runHook, transcript, userText } from "./harness.ts";
+import { assistantText, events, myosHome, runHook, SESSION_ID, transcript, userText } from "./harness.ts";
 
 const HOOK = "payload/hooks/LastResponseCache.hook.ts";
-const CACHE = ".myos/MYOS/MEMORY/STATE/last-response.txt";
+const CACHE = `.myos/MYOS/MEMORY/STATE/last-response/${SESSION_ID}.txt`;
+const UNKEYED = ".myos/MYOS/MEMORY/STATE/last-response.txt";
 
 describe("caching", () => {
   test("last_assistant_message from stdin is cached verbatim", async () => {
@@ -47,6 +48,18 @@ describe("caching", () => {
       stdin: events.stop({ last_assistant_message: long }),
     });
     expect(await Bun.file(home.join(CACHE)).text()).toBe(long);
+  });
+});
+
+describe("per session", () => {
+  test("two sessions keep separate files; no session id falls back to the unkeyed name", async () => {
+    using home = myosHome("lastresp-sessions");
+    await runHook(HOOK, { home, stdin: events.stop({ last_assistant_message: "mine" }) });
+    await runHook(HOOK, { home, stdin: events.stop({ session_id: "other", last_assistant_message: "theirs" }) });
+    await runHook(HOOK, { home, stdin: events.stop({ session_id: undefined, last_assistant_message: "anon" }) });
+    expect(await Bun.file(home.join(CACHE)).text()).toBe("mine");
+    expect(await Bun.file(home.join(".myos/MYOS/MEMORY/STATE/last-response/other.txt")).text()).toBe("theirs");
+    expect(await Bun.file(home.join(UNKEYED)).text()).toBe("anon");
   });
 });
 

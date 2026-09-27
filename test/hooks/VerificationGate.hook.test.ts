@@ -6,12 +6,12 @@
  */
 import { describe, expect, test } from "bun:test";
 
-import { assistantToolUse, events, myosHome, runHook, toolResult, transcript, userText } from "./harness.ts";
-import { classifyClaim, genericFlowClaimUnit, publicityClaimUnit, stripNoise } from "../../payload/hooks/VerificationGate.hook.ts";
+import { assistantToolUse, events, myosHome, runHook, SESSION_ID, toolResult, transcript, userText } from "./harness.ts";
+import { classifyClaim, genericFlowClaimUnit, publicityClaimUnit, splitIntoUnits, stripNoise } from "../../payload/hooks/VerificationGate.hook.ts";
 
 const HOOK = "payload/hooks/VerificationGate.hook.ts";
 const OBS = ".myos/MYOS/MEMORY/OBSERVABILITY/verification-gate.jsonl";
-const LATCH = ".myos/MYOS/MEMORY/STATE/verification-gate-blocked.json";
+const LATCH = `.myos/MYOS/MEMORY/STATE/verification-gate-blocked/${SESSION_ID}.json`;
 
 type Home = ReturnType<typeof myosHome>;
 const rows = async (home: Home) =>
@@ -37,6 +37,13 @@ describe("claim classification (pure)", () => {
     expect(classifyClaim("Run the app, then check the login flow works.")).toBeNull();
     expect(classifyClaim('The ticket says "the login flow works" but I have not checked.')).toBeNull();
     expect(classifyClaim(stripNoise("```\nthe login flow works\n```"))).toBeNull();
+  });
+
+  test("a URL is one piece of a unit, never split at its dots", () => {
+    expect(splitIntoUnits("It is live at https://harryf.github.io/private/a.html. Next.")).toEqual([
+      "It is live at https://harryf.github.io/private/a.html",
+      "Next",
+    ]);
   });
 
   test("terse overclaims and publicity claims are detected", () => {
@@ -80,6 +87,19 @@ describe("blocking (default mode)", () => {
     expect(r.stderr).toContain("calendar page is live");
     expect((await rows(home)).at(-1).decision).toBe("block");
     expect(await Bun.file(home.join(LATCH)).exists()).toBe(true);
+  });
+
+  test("a deploy claim that is also a publicity claim still blocks on T1 (T5 alone only logs)", async () => {
+    using home = myosHome("vg-deploy-pages");
+    const r = await runHook(HOOK, {
+      home,
+      stdin: stop(deployTurn(home), "The page is now live on GitHub Pages at https://harryf.github.io/private/calendar.html."),
+    });
+    expect(r.exitCode).toBe(2);
+    expect(r.stderr).toContain("VerificationGate/T1");
+    const decisions = (await rows(home)).map((x) => `${x.type}:${x.decision}`);
+    expect(decisions).toContain("T5:would-block");
+    expect(decisions).toContain("T1:block");
   });
 
   test("the same deploy claim with a curl probe after the deploy passes", async () => {
@@ -158,7 +178,11 @@ describe("blocking (default mode)", () => {
 });
 
 describe("modes and switches", () => {
-  test("MYOS_GATES=off passes silently: no output, no log", async () => {
+  test("MYOS_GATES=off passes silently: no output, no log (positive control: log mode writes a row)", async () => {
+    using control = myosHome("vg-off-control");
+    const c = await runHook(HOOK, { home: control, stdin: stop(deployTurn(control), DEPLOY_CLAIM), env: { MYOS_GATES: "log" } });
+    expect(c.exitCode).toBe(0);
+    expect((await rows(control)).filter((x) => x.decision === "would-block" && x.type === "T1")).toHaveLength(1);
     using home = myosHome("vg-off");
     const r = await runHook(HOOK, { home, stdin: stop(deployTurn(home), DEPLOY_CLAIM), env: { MYOS_GATES: "off" } });
     expect(r.exitCode).toBe(0);
@@ -176,6 +200,17 @@ describe("modes and switches", () => {
     expect(last.would_block).toBe(true);
     expect(last.reason).toContain("VerificationGate/T1");
     expect(await Bun.file(home.join(LATCH)).exists()).toBe(false);
+  });
+
+  test("VERIFGATE_T1=off skips the type; VERIFGATE_OFF=1 silences the gate", async () => {
+    using home = myosHome("vg-t1-skip");
+    const r = await runHook(HOOK, { home, stdin: stop(deployTurn(home), DEPLOY_CLAIM), env: { VERIFGATE_T1: "off" } });
+    expect(r.exitCode).toBe(0);
+    expect((await rows(home)).some((x) => x.decision === "would-block" && x.type === "T1")).toBe(false);
+    using home2 = myosHome("vg-gate-off");
+    const r2 = await runHook(HOOK, { home: home2, stdin: stop(deployTurn(home2), DEPLOY_CLAIM), env: { VERIFGATE_OFF: "1" } });
+    expect(r2.exitCode).toBe(0);
+    expect(await rows(home2)).toEqual([]);
   });
 
   test("a per type switch demotes that type to log", async () => {

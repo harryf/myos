@@ -1,74 +1,59 @@
 #!/usr/bin/env bun
 /**
- * @version 1.2.3
- * TaskGovernance.hook.ts - Subagent Task Creation Governance (TaskCreated)
+ * TaskGovernance.hook.ts (TaskCreated): cheap insurance against runaway
+ * subagent task spawning.
  *
- * PURPOSE:
- * Gates task creation by subagents. Prevents runaway task spawning and
- * blocks empty-description tasks.
+ *   1. A task description under 10 characters is blocked.
+ *   2. At most 50 tasks per session; the count lives in
+ *      MEMORY/STATE/task-governance/<session>.json (tmp file then rename).
  *
- * TRIGGER: TaskCreated
- *
- * OUTPUT:
- * - exit(0): Allow task creation
- * - exit(2): Block task creation (stderr fed back to model)
- *
- * GOVERNANCE RULES:
- * 1. Block tasks with empty descriptions (quality gate)
- * 2. Rate limit: max 50 tasks per session to prevent runaway spawning
+ * exit 0 allows, exit 2 blocks with the reason on stderr. Unparseable or
+ * empty stdin allows: a blocking hook fails open.
  */
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import { readHookInput } from "./lib/hook-io";
+import { safeSessionId } from "./lib/latch";
+import { myosPath } from "./lib/paths";
 
-import { readFileSync } from "fs";
-import { join } from "path";
+export const MAX_TASKS_PER_SESSION = 50;
+export const counterPath = (sessionId?: string) =>
+  join(myosPath("MEMORY", "STATE", "task-governance"), `${safeSessionId(sessionId)}.json`);
 
-// Unparseable or empty stdin → allow. The contract in this header is exit 0
-// (allow) or exit 2 (block); an uncaught parse error used to exit 1, which is
-// neither: a blocking hook must fail OPEN like every other guard in this dir.
-let input: { task_description?: string };
-try {
-  input = JSON.parse(readFileSync("/dev/stdin", "utf-8"));
-} catch {
-  process.exit(0);
-}
-
-const { task_description } = input;
-
-// --- Quality gate: block empty descriptions ---
-if (!task_description || task_description.trim().length < 10) {
-  process.stderr.write(
-    `Task creation blocked: description too short (${task_description?.length ?? 0} chars). Provide a meaningful task description of at least 10 characters.`
-  );
-  process.exit(2);
-}
-
-// --- Rate limit: track tasks per session via temp file ---
-// CLAUDE_SESSION_ID doesn't exist in env, so we use ppid (Claude Code process)
-// and reset the counter when the session (ppid) changes.
-const trackFile = join("/tmp", "myos-task-governance.json");
-let taskCount = 0;
-const currentPpid = String(process.ppid);
-
-try {
-  const data = JSON.parse(readFileSync(trackFile, "utf-8"));
-  if (data.ppid === currentPpid) {
-    taskCount = data.count || 0;
+function readCount(path: string): number {
+  try {
+    return existsSync(path) ? Number(JSON.parse(readFileSync(path, "utf8")).count) || 0 : 0;
+  } catch {
+    return 0;
   }
-  // Different ppid = new session, counter resets to 0
-} catch {
-  // File doesn't exist or is corrupt: first task this session
 }
 
-const MAX_TASKS_PER_SESSION = 50;
-if (taskCount >= MAX_TASKS_PER_SESSION) {
-  process.stderr.write(
-    `Task creation blocked: session limit of ${MAX_TASKS_PER_SESSION} tasks reached. This prevents runaway task spawning. Complete existing tasks before creating new ones.`
-  );
-  process.exit(2);
+async function main(): Promise<number> {
+  const input = await readHookInput();
+  if (!input) return 0;
+  const description = String(input.task_description ?? "");
+  if (description.trim().length < 10) {
+    process.stderr.write(
+      `Task creation blocked: description too short (${description.length} chars). Provide a meaningful task description of at least 10 characters.`,
+    );
+    return 2;
+  }
+  const path = counterPath(input.session_id);
+  const count = readCount(path);
+  if (count >= MAX_TASKS_PER_SESSION) {
+    process.stderr.write(
+      `Task creation blocked: session limit of ${MAX_TASKS_PER_SESSION} tasks reached. This prevents runaway task spawning. Complete existing tasks before creating new ones.`,
+    );
+    return 2;
+  }
+  try {
+    mkdirSync(join(path, ".."), { recursive: true });
+    writeFileSync(`${path}.tmp`, JSON.stringify({ count: count + 1 }));
+    renameSync(`${path}.tmp`, path);
+  } catch {
+    /* a lost count only loosens the cap */
+  }
+  return 0;
 }
 
-// Increment counter with session tracking
-const { writeFileSync } = await import("fs");
-writeFileSync(trackFile, JSON.stringify({ ppid: currentPpid, count: taskCount + 1 }));
-
-// Allow task creation
-process.exit(0);
+main().then((code) => process.exit(code), () => process.exit(0));

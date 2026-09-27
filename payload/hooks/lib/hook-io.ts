@@ -2,7 +2,28 @@
  * hook-io.ts: the shared stdin reader, plus the one transcript read the Stop
  * hooks need (the last assistant text) when stdin does not carry it.
  */
-import { existsSync, readFileSync } from "node:fs";
+import { closeSync, existsSync, openSync, readSync, statSync } from "node:fs";
+
+/** Transcripts reach hundreds of MB; recent events are all a hook needs. */
+export const TRANSCRIPT_TAIL_BYTES = 8 * 1024 * 1024;
+
+/** The last TRANSCRIPT_TAIL_BYTES of a file, or null when unreadable. */
+export function readTranscriptTail(path: string | undefined, maxBytes = TRANSCRIPT_TAIL_BYTES): string | null {
+  let fd: number | null = null;
+  try {
+    if (!path || !existsSync(path)) return null;
+    const size = statSync(path).size;
+    const start = Math.max(0, size - maxBytes);
+    const buf = Buffer.alloc(size - start);
+    fd = openSync(path, "r");
+    const got = readSync(fd, buf, 0, buf.length, start);
+    return buf.subarray(0, got).toString("utf-8");
+  } catch {
+    return null;
+  } finally {
+    if (fd !== null) try { closeSync(fd); } catch { /* gone */ }
+  }
+}
 
 export interface HookInput {
   session_id: string;
@@ -63,8 +84,9 @@ function assistantTextOf(entry: any): string {
  */
 export function lastAssistantText(transcriptPath: string | undefined): string {
   try {
-    if (!transcriptPath || !existsSync(transcriptPath)) return "";
-    const lines = readFileSync(transcriptPath, "utf8").split("\n");
+    const raw = readTranscriptTail(transcriptPath);
+    if (!raw) return "";
+    const lines = raw.split("\n");
     for (let i = lines.length - 1; i >= 0; i--) {
       const line = lines[i]!.trim();
       if (!line.includes('"assistant"')) continue;

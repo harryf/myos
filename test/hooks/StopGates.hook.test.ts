@@ -62,6 +62,15 @@ describe("dispatch", () => {
 
 describe("Anti", () => {
   test("Anti: MYOS_GATES=off exits 0 with empty stdout and writes no log", async () => {
+    // Positive control: the same input in log mode writes exactly one format row.
+    using control = myosHome("stopgates-off-control");
+    const c = await runHook(HOOK, {
+      home: control,
+      stdin: events.stop({ transcript_path: deployTurn(control), last_assistant_message: CLAIM }),
+      env: { MYOS_GATES: "log" },
+    });
+    expect(c.exitCode).toBe(0);
+    expect(await rows(control, "format-gate.jsonl")).toHaveLength(1);
     using home = myosHome("stopgates-off");
     const r = await runHook(HOOK, {
       home,

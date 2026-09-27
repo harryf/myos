@@ -14,12 +14,9 @@
  * Blocks once per run, and only when armed; log mode writes no latch.
  * Log: MEMORY/OBSERVABILITY/isa-gates.jsonl with gate "ISACloseGate".
  */
-import { createHash } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
-import { dirname } from "node:path";
 import { gateBlocking, gateLog, type GateOutcome } from "./lib/gates";
 import { activeIsa, COMPLETION_RE, ISA_ADDRESSED_RE, ISA_LOG, isaEditedIn, toolCallsSinceIsaWrite } from "./lib/isa-gates";
-import { myosPath } from "./lib/paths";
+import { isLatched, setLatch } from "./lib/latch";
 import { runStandalone, type GateContext } from "./lib/stop-context";
 import { spawnedAgent } from "./lib/transcript-evidence";
 import { splitIntoUnits, stripNoise, unitIsClaimable } from "./VerificationGate.hook";
@@ -27,7 +24,7 @@ import { splitIntoUnits, stripNoise, unitIsClaimable } from "./VerificationGate.
 export const GATE = "ISACloseGate";
 export const LOG_FILE = ISA_LOG;
 const DEFAULT_THRESHOLD = 10;
-const latchPath = () => myosPath("MEMORY", "STATE", "isa-close-gate-blocked.json");
+const LATCH = "isa-close-gate-blocked";
 
 export function completionUnit(message: string): string | null {
   for (const u of splitIntoUnits(stripNoise(message)).filter((u) => unitIsClaimable(u))) {
@@ -37,21 +34,6 @@ export function completionUnit(message: string): string | null {
   return null;
 }
 
-function fp(session: string, slug: string): string {
-  return createHash("sha256").update(`${session}|${slug}`).digest("hex").slice(0, 16);
-}
-function latched(f: string): boolean {
-  try { return existsSync(latchPath()) && (JSON.parse(readFileSync(latchPath(), "utf8")) as string[]).includes(f); } catch { return false; }
-}
-function latch(f: string): void {
-  try {
-    mkdirSync(dirname(latchPath()), { recursive: true });
-    let arr: string[] = [];
-    try { arr = JSON.parse(readFileSync(latchPath(), "utf8")); } catch { arr = []; }
-    arr.push(f);
-    writeFileSync(latchPath(), JSON.stringify(arr.slice(-400)));
-  } catch { /* best effort */ }
-}
 
 export async function run(ctx: GateContext): Promise<GateOutcome | null> {
   try {
@@ -78,9 +60,8 @@ export async function run(ctx: GateContext): Promise<GateOutcome | null> {
       `Close the finished claims with evidence, record decisions, update phase and progress in ${isa.path}, then restate; or say why no ISA delta is needed.`;
     if (ctx.recovery) return { gate: GATE, fail: true, reason };
     if (gateBlocking()) {
-      const f = fp(session, isa.slug);
-      if (latched(f)) { log({ decision: "pass-dedupe" }); return null; }
-      latch(f);
+      if (isLatched(LATCH, session, isa.slug)) { log({ decision: "pass-dedupe" }); return null; }
+      setLatch(LATCH, session, isa.slug);
       gateLog(LOG_FILE, { gate: GATE, verdict: "fail", reason, session, slug: isa.slug, stale, blocked: true });
       return { gate: GATE, fail: true, reason, block: true };
     }

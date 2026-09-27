@@ -40,7 +40,11 @@ describe("modes", () => {
     expect(row).toMatchObject({ gate: "ISAStaleWriteGuard", verdict: "fail", would_block: true });
   });
 
-  test("off: passes silently", async () => {
+  test("off: passes silently (positive control: log mode writes one row)", async () => {
+    using control = myosHome("stale-off-control");
+    const cisa = await movedIsa(control, CURRENT);
+    await runHook(HOOK, { home: control, stdin: write(cisa), env: { MYOS_GATES: "log" } });
+    expect((await Bun.file(control.join(LOG)).text()).trim().split("\n")).toHaveLength(1);
     using home = myosHome("stale-off");
     const isa = await movedIsa(home, CURRENT);
     const r = await runHook(HOOK, { home, stdin: write(isa), env: { MYOS_GATES: "off" } });

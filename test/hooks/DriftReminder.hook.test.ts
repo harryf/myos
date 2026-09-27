@@ -5,10 +5,10 @@
 import { describe, expect, test } from "bun:test";
 import { utimesSync } from "node:fs";
 
-import { events, myosHome, runHook } from "./harness.ts";
+import { events, myosHome, runHook, SESSION_ID } from "./harness.ts";
 
 const HOOK = "payload/hooks/DriftReminder.hook.ts";
-const CACHE = ".myos/MYOS/MEMORY/STATE/last-response.txt";
+const CACHE = `.myos/MYOS/MEMORY/STATE/last-response/${SESSION_ID}.txt`;
 const DASH = "\u2014";
 
 describe("DriftReminder", () => {
@@ -39,6 +39,12 @@ describe("DriftReminder", () => {
     using home = myosHome("drift-clean", { [CACHE]: "════ myos ═══\nAnswer.\n🗣️ myos: done" });
     const r = await runHook(HOOK, { home, stdin: events.userPrompt("next") });
     expect(r.stdout).toContain("Last response was clean");
+  });
+
+  test("Anti: another session's answer is never measured", async () => {
+    using home = myosHome("drift-other", { ".myos/MYOS/MEMORY/STATE/last-response/other.txt": "broken" });
+    const r = await runHook(HOOK, { home, stdin: events.userPrompt("next") });
+    expect(r.stdout).not.toContain("Last response");
   });
 
   test("Anti: a cache older than 30 minutes belongs to another session and is ignored", async () => {

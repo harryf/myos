@@ -54,7 +54,10 @@ describe("the gate", () => {
     expect(row.reason).toContain("em dash");
   });
 
-  test("Anti: MYOS_GATES=off writes nothing", async () => {
+  test("Anti: MYOS_GATES=off writes nothing (positive control: log mode writes one row)", async () => {
+    using control = myosHome("fmt-off-control");
+    await runHook(HOOK, { home: control, stdin: events.stop({ last_assistant_message: "x" }), env: { MYOS_GATES: "log" } });
+    expect((await Bun.file(control.join(LOG)).text()).trim().split("\n")).toHaveLength(1);
     using home = myosHome("fmt-off");
     await runHook(HOOK, { home, stdin: events.stop({ last_assistant_message: "x" }), env: { MYOS_GATES: "off" } });
     expect(await Bun.file(home.join(LOG)).exists()).toBe(false);
