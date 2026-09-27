@@ -1,0 +1,18 @@
+node_modules/
+# scratch dir the test harness copies skill trees into (test/harness.ts tempCopy)
+.test-tmp/
+.DS_Store
+*.log
+bun.lockb
+bun.lock
+# runtime state and personal data never enter the repo; the installer treats
+# MYOS/MEMORY and the real MYOS/USER files as user owned (payload ships scaffold only)
+/MEMORY/
+payload/MYOS/MEMORY/
+payload/MYOS/USER/CONFIG/MYOS_CONFIG.toml
+payload/MYOS/USER/CONFIG/trial.json
+payload/MYOS/USER/PROJECTS/
+settings.json
+.env
+.env.*
+coverage/

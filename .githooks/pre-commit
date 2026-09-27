@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# myos pre commit gate: no em dash (U+2014) may enter the repository, anywhere.
+# Test fixtures and the style checker write the character as the escape backslash-u2014.
+# Activate once per clone: git config core.hooksPath .githooks
+set -euo pipefail
+
+hits="$(git diff --cached -U0 --no-color | perl -CS -ne 'print if /^\+(?!\+\+)/ && /\x{2014}/' || true)"
+if [[ -n "$hits" ]]; then
+  echo "pre-commit: em dash (U+2014) in staged changes. Replace it (colon, comma, parentheses) or write \\u2014 in code." >&2
+  echo "$hits" | head -20 >&2
+  exit 1
+fi
+
+# Names of staged files must not carry the character either.
+if git diff --cached --name-only -z | perl -CS -0 -ne 'exit 1 if /\x{2014}/'; then :; else
+  echo "pre-commit: a staged file name contains an em dash." >&2
+  exit 1
+fi

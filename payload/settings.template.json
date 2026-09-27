@@ -1,0 +1,606 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "env": {
+    "MYOS_DIR": "__MYOS_HOME__/MYOS",
+    "MYOS_CONFIG_DIR": "__MYOS_HOME__/MYOS",
+    "BASH_DEFAULT_TIMEOUT_MS": "600000",
+    "API_TIMEOUT_MS": "1800000",
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1",
+    "CLAUDE_CODE_FORK_SUBAGENT": "1",
+    "CLAUDE_CODE_MAX_CONCURRENT_SUBAGENTS": "20",
+    "CLAUDE_CODE_MAX_SUBAGENT_SPAWN_DEPTH": "3"
+  },
+  "model": "fable[1m]",
+  "autoMemoryEnabled": false,
+  "postCompactRestore": {
+    "fullFiles": [
+      "MYOS/USER/PROJECTS.md"
+    ]
+  },
+  "theme": "dark-daltonized",
+  "tui": "fullscreen",
+  "teammateMode": "auto",
+  "includeGitInstructions": false,
+  "fileCheckpointingEnabled": true,
+  "worktree": {
+    "baseRef": "head"
+  },
+  "skillListingBudgetFraction": 0.15,
+  "enabledPlugins": {
+    "code-review@claude-plugins-official": true,
+    "pr-review-toolkit@claude-plugins-official": true,
+    "typescript-lsp@claude-plugins-official": true,
+    "swift-lsp@claude-plugins-official": true
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "bun '__MYOS_HOME__/MYOS/statusline.ts'"
+  },
+  "_permissionsDocs": "Rules are validated against MergeSettings.KNOWN_TOOL_NAMES at install: a rule naming an unknown tool (MultiEdit, for example) is silently PRUNED, so add the tool name there first. MCP rules are checked by prefix only. autoMode carries the natural language guidance for compound and heredoc shapes that prefix rules cannot express. Do NOT add `Write(<path>)` rules: the harness ignores them for file permission checks and warns on every boot; `Edit(<path>)` covers every file editing tool including Write.",
+  "permissions": {
+    "defaultMode": "auto",
+    "additionalDirectories": [],
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+      "LS",
+      "WebFetch",
+      "WebSearch",
+      "NotebookRead",
+      "NotebookEdit",
+      "TodoWrite",
+      "Task",
+      "Skill",
+      "SlashCommand",
+      "AskUserQuestion",
+      "ToolSearch",
+      "EnterPlanMode",
+      "ExitPlanMode",
+      "EnterWorktree",
+      "ExitWorktree",
+      "LSP",
+      "Monitor",
+      "SendMessage",
+      "ListMcpResourcesTool",
+      "ReadMcpResourceTool",
+      "TaskCreate",
+      "TaskGet",
+      "TaskList",
+      "TaskOutput",
+      "TaskStop",
+      "TaskUpdate",
+      "CronCreate",
+      "CronDelete",
+      "CronList",
+      "TeamCreate",
+      "TeamDelete",
+      "BashOutput",
+      "KillShell",
+      "Edit(__MYOS_HOME__/**)",
+      "Edit(~/Code/**)",
+      "Edit(~/Documents/**)",
+      "Edit(/tmp/**)",
+      "Edit(/private/tmp/**)",
+      "Edit(/var/folders/**)",
+      "Bash(cd:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(egrep:*)",
+      "Bash(fgrep:*)",
+      "Bash(sed:*)",
+      "Bash(awk:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(cat:*)",
+      "Bash(bat:*)",
+      "Bash(less:*)",
+      "Bash(more:*)",
+      "Bash(ls:*)",
+      "Bash(eza:*)",
+      "Bash(tree:*)",
+      "Bash(find:*)",
+      "Bash(fd:*)",
+      "Bash(file:*)",
+      "Bash(stat:*)",
+      "Bash(wc:*)",
+      "Bash(sort:*)",
+      "Bash(uniq:*)",
+      "Bash(cut:*)",
+      "Bash(tr:*)",
+      "Bash(paste:*)",
+      "Bash(column:*)",
+      "Bash(comm:*)",
+      "Bash(diff:*)",
+      "Bash(cmp:*)",
+      "Bash(echo:*)",
+      "Bash(printf:*)",
+      "Bash(pwd)",
+      "Bash(which:*)",
+      "Bash(type:*)",
+      "Bash(command:*)",
+      "Bash(env)",
+      "Bash(env:*)",
+      "Bash(basename:*)",
+      "Bash(dirname:*)",
+      "Bash(realpath:*)",
+      "Bash(readlink:*)",
+      "Bash(hexdump:*)",
+      "Bash(xxd:*)",
+      "Bash(od:*)",
+      "Bash(strings:*)",
+      "Bash(md5:*)",
+      "Bash(md5sum:*)",
+      "Bash(shasum:*)",
+      "Bash(sha256sum:*)",
+      "Bash(jq:*)",
+      "Bash(yq:*)",
+      "Bash(date)",
+      "Bash(date:*)",
+      "Bash(sleep:*)",
+      "Bash(true)",
+      "Bash(false)",
+      "Bash(test:*)",
+      "Bash(expr:*)",
+      "Bash(seq:*)",
+      "Bash(ps:*)",
+      "Bash(lsof:*)",
+      "Bash(uname:*)",
+      "Bash(uptime)",
+      "Bash(whoami)",
+      "Bash(id:*)",
+      "Bash(groups:*)",
+      "Bash(ping:*)",
+      "Bash(dig:*)",
+      "Bash(nslookup:*)",
+      "Bash(host:*)",
+      "Bash(whois:*)",
+      "Bash(mkdir:*)",
+      "Bash(touch:*)",
+      "Bash(cp:*)",
+      "Bash(mv:*)",
+      "Bash(ln:*)",
+      "Bash(chmod:*)",
+      "Bash(tee:*)",
+      "Bash(pbcopy)",
+      "Bash(pbpaste)",
+      "Bash(open:*)",
+      "Bash(wait)",
+      "Bash(disown)",
+      "Bash(bash -n:*)",
+      "Bash(zsh -n:*)",
+      "Bash(shellcheck:*)",
+      "Bash(git status:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git show:*)",
+      "Bash(git branch:*)",
+      "Bash(git remote:*)",
+      "Bash(git config --get:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(git ls-files:*)",
+      "Bash(git ls-tree:*)",
+      "Bash(git blame:*)",
+      "Bash(git tag:*)",
+      "Bash(git describe:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(git reflog:*)",
+      "Bash(git fetch:*)",
+      "Bash(git pull:*)",
+      "Bash(git stash list:*)",
+      "Bash(git worktree list:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git mv:*)",
+      "Bash(git restore:*)",
+      "Bash(git switch:*)",
+      "Bash(git checkout:*)",
+      "Bash(bun:*)",
+      "Bash(bunx:*)",
+      "Bash(bun run:*)",
+      "Bash(gh:*)",
+      "Bash(curl:*)",
+      "Bash(interceptor:*)",
+      "mcp__claude-in-chrome__tabs_context_mcp",
+      "mcp__claude-in-chrome__read_page",
+      "mcp__claude-in-chrome__get_page_text",
+      "mcp__claude-in-chrome__find",
+      "mcp__claude-in-chrome__read_console_messages",
+      "mcp__claude-in-chrome__read_network_requests",
+      "mcp__claude-in-chrome__navigate",
+      "mcp__claude-in-chrome__computer",
+      "mcp__claude-in-chrome__javascript_tool",
+      "mcp__claude-in-chrome__form_input",
+      "mcp__claude-in-chrome__tabs_create_mcp",
+      "mcp__claude-in-chrome__tabs_close_mcp",
+      "mcp__claude-in-chrome__resize_window",
+      "mcp__claude-in-chrome__gif_creator",
+      "mcp__claude-in-chrome__upload_image",
+      "mcp__claude-in-chrome__list_connected_browsers",
+      "mcp__claude-in-chrome__select_browser",
+      "mcp__claude-in-chrome__switch_browser",
+      "mcp__claude_ai_Google_Calendar__list_*",
+      "mcp__claude_ai_Google_Calendar__get_*",
+      "mcp__claude_ai_Google_Drive__search",
+      "mcp__claude_ai_Google_Drive__get_metadata",
+      "mcp__claude_ai_Google_Drive__fetch_file",
+      "mcp__claude_ai_Google_Drive__list_folder",
+      "mcp__claude_ai_Gmail__search_*",
+      "mcp__claude_ai_Gmail__get_*",
+      "mcp__claude_ai_Gmail__list_*",
+      "mcp__claude_ai_Gmail__read_*",
+      "Agent(general-purpose)",
+      "Agent(Explore)",
+      "Agent(Plan)",
+      "Agent(claude-code-guide)",
+      "Agent(Designer)",
+      "Agent(Engineer)",
+      "Agent(Max)"
+    ],
+    "ask": [
+      "mcp__claude_ai_Google_Calendar__create_*",
+      "mcp__claude_ai_Google_Calendar__update_*",
+      "mcp__claude_ai_Google_Calendar__delete_*",
+      "mcp__claude_ai_Google_Calendar__move_event",
+      "mcp__claude_ai_Google_Calendar__respond_to_event",
+      "mcp__claude_ai_Google_Drive__create_*",
+      "mcp__claude_ai_Google_Drive__update_*",
+      "mcp__claude_ai_Google_Drive__delete_*",
+      "mcp__claude_ai_Google_Drive__move_file",
+      "mcp__claude_ai_Google_Drive__rename_file",
+      "mcp__claude_ai_Gmail__create_*",
+      "mcp__claude_ai_Gmail__send_*",
+      "mcp__claude_ai_Gmail__update_*",
+      "mcp__claude_ai_Gmail__delete_*",
+      "mcp__claude_ai_Gmail__modify_*",
+      "Bash(git push:*)",
+      "Bash(git rm:*)",
+      "Bash(git reset:*)",
+      "Bash(git rebase:*)",
+      "Bash(git filter-branch:*)",
+      "Bash(rm:*)",
+      "Bash(rmdir:*)",
+      "Bash(sudo:*)",
+      "Bash(launchctl:*)",
+      "Bash(crontab:*)",
+      "Bash(security:*)",
+      "Bash(defaults write:*)",
+      "Bash(ssh:*)",
+      "Bash(scp:*)",
+      "Bash(rsync:*)",
+      "Bash(npm:*)",
+      "Bash(npx:*)",
+      "Bash(pip:*)",
+      "Bash(pip3:*)",
+      "Bash(brew:*)",
+      "Bash(docker:*)",
+      "Bash(~/bin/publish:*)",
+      "Read(~/.myos/.env)",
+      "Read(~/.myos/.env.*)",
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Edit(**/.env)",
+      "Edit(**/.env.*)"
+    ],
+    "deny": [
+      "Bash(rm -rf /)",
+      "Bash(rm -rf /*)",
+      "Bash(rm -rf ~)",
+      "Bash(rm -rf ~/*)",
+      "Bash(rm -rf $HOME)",
+      "Bash(rm -rf $HOME/*)",
+      "Bash(rm -rf .git)",
+      "Bash(rm -rf ~/.myos*)",
+      "Bash(rm -rf ~/.claude*)",
+      "Bash(sudo rm -rf:*)",
+      "Bash(dd if=* of=/dev/*)",
+      "Bash(mkfs*)",
+      "Bash(* > /dev/sd*)",
+      "Bash(* > /dev/disk*)",
+      "Bash(curl * | sh)",
+      "Bash(curl * | bash)",
+      "Bash(curl * | zsh)",
+      "Bash(wget * | sh)",
+      "Bash(wget * | bash)",
+      "Bash(wget * | zsh)",
+      "Bash(git push --force * main)",
+      "Bash(git push --force * master)",
+      "Bash(git push -f * main)",
+      "Bash(git push -f * master)",
+      "Bash(gh repo delete:*)",
+      "Bash(chmod -R 777 /)",
+      "Bash(chmod -R 777 ~)",
+      "Bash(chmod -R 777 $HOME)",
+      "Bash(security dump-keychain:*)",
+      "Edit(/etc/**)",
+      "Edit(/System/**)",
+      "Edit(/usr/**)",
+      "Edit(/bin/**)",
+      "Edit(/sbin/**)",
+      "Read(~/.ssh/id_*)",
+      "Read(~/.ssh/*_rsa)",
+      "Read(~/.ssh/*_ed25519)",
+      "Read(~/.aws/credentials)",
+      "Read(~/.gnupg/private*)"
+    ]
+  },
+  "skipAutoPermissionPrompt": true,
+  "autoMode": {
+    "allow": [
+      "Reading, writing and editing files under ~/.myos/ is safe: it is Harry's own myos harness.",
+      "Reading, writing and editing files under ~/Code/ is safe: it holds Harry's projects (comedy business automation, tools for friends and family).",
+      "Reading, writing and editing files under ~/Documents/ is safe; ~/Documents/Comedy holds Harry's show material and promotion work.",
+      "Compound commands chaining trusted tools are safe: `cd X && bun Y`, `cd X && git log`, `cmd | rg Z` are as safe as their parts.",
+      "Piping output through grep, rg, jq, sed, awk, sort, uniq, head, tail, wc is safe: these are read-only filters.",
+      "Running bun, bunx, git read and commit subcommands (status, log, diff, show, add, commit), gh, and curl to READ a URL is routine work.",
+      "Writing to MYOS/MEMORY/, MYOS/USER/ and the session scratchpad is routine bookkeeping.",
+      "Editing ~/.myos/settings.json, ~/.myos/CLAUDE.md, ~/.myos/hooks/** and ~/.myos/skills/** at Harry's request is maintenance; the conversation instruction is the authorization.",
+      "Spawning subagents for research, exploration and review is standard workflow."
+    ],
+    "hard_deny": [
+      "Bash(rm -rf /*)",
+      "Bash(rm -rf ~)",
+      "Bash(rm -rf ~/.myos*)",
+      "Bash(rm -rf ~/.claude*)",
+      "Bash(rm -rf $HOME*)",
+      "Bash(rm -fr*)",
+      "Bash(rm -r -f*)",
+      "Bash(sudo rm -rf*)",
+      "Bash(git push --force*)",
+      "Bash(git push -f *)",
+      "Bash(curl* | sh*)",
+      "Bash(curl* | bash*)",
+      "Bash(wget* | sh*)",
+      "Bash(wget* | bash*)",
+      "Bash(dd if=*of=/dev/*)",
+      "Bash(mkfs*)",
+      "Bash(gh repo delete*)",
+      "Bash(rsync --delete *prod*)",
+      "Bash(security dump-keychain*)"
+    ],
+    "environment": [
+      "~/.myos/ is Harry's myos harness (hooks, skills, MEMORY). Operations inside it are trusted.",
+      "~/Code/ holds Harry's projects: comedy business automation (the IN YOUR FACE site, Meta ads scripts, Eventfrog sales tracking, Grist tables) and small tools for friends and family. Building, testing, grepping and committing there is routine.",
+      "~/Documents/Comedy holds show material, promotion videos and flyers; editing and rendering there is routine.",
+      "Compound shell commands and heredocs into git commit -F - are normal: approve when each part is trusted.",
+      "These change live state and ALWAYS warrant a prompt: deploys, `~/bin/publish`, git push and any force push, launchctl, crontab, writes to Grist (curl POST, PUT, PATCH or DELETE to getgrist.com), and Meta ads or other scripts run with `--apply` or `--activate`.",
+      "Reading Google Calendar, Drive and Gmail through the claude.ai connectors is routine and auto-approved. Creating, changing, sending or deleting anything there is outward facing and always warrants a prompt.",
+      "Credential access, package installs (npm, pip, brew) and anything touching production are not routine."
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun '__MYOS_HOME__/hooks/HookHealer.hook.ts'",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "bun '__MYOS_HOME__/hooks/LoadContext.hook.ts'",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "bun '__MYOS_HOME__/hooks/TrialClock.hook.ts'",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun '__MYOS_HOME__/hooks/TimeContext.hook.ts'",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "bun '__MYOS_HOME__/hooks/DriftReminder.hook.ts'",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "bun '__MYOS_HOME__/hooks/PromptProcessing.hook.ts'",
+            "timeout": 5,
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "bun '__MYOS_HOME__/hooks/ModelRungGuard.hook.ts'",
+            "timeout": 5,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "'__MYOS_HOME__/hooks/ContextReduction.hook.sh'",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "bun '__MYOS_HOME__/hooks/PublicPushGate.hook.ts'",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun '__MYOS_HOME__/hooks/ISAStaleWriteGuard.hook.ts'",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun '__MYOS_HOME__/hooks/AgentInvocation.hook.ts'",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Agent",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun '__MYOS_HOME__/hooks/AgentInvocation.hook.ts'",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun '__MYOS_HOME__/hooks/ISASync.hook.ts'",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "bun '__MYOS_HOME__/hooks/CheckpointPerISC.hook.ts'",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Read|Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun '__MYOS_HOME__/hooks/ISAStaleWriteGuard.hook.ts'",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "WebFetch|WebSearch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun '__MYOS_HOME__/hooks/Safety.hook.ts'",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun '__MYOS_HOME__/hooks/LoopDetector.hook.ts'",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "bun '__MYOS_HOME__/hooks/EventLogger.hook.ts'",
+            "timeout": 5,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun '__MYOS_HOME__/hooks/EventLogger.hook.ts'",
+            "timeout": 5,
+            "async": true
+          },
+          {
+            "type": "command",
+            "command": "bun '__MYOS_HOME__/hooks/LoopDetector.hook.ts'",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "matcher": "Bash|Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun '__MYOS_HOME__/hooks/Safety.hook.ts'",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "TaskCreated": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun '__MYOS_HOME__/hooks/TaskGovernance.hook.ts'",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "ConfigChange": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun '__MYOS_HOME__/hooks/EventLogger.hook.ts'",
+            "timeout": 5,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun '__MYOS_HOME__/hooks/LastResponseCache.hook.ts'",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "bun '__MYOS_HOME__/hooks/StopGates.hook.ts'",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun '__MYOS_HOME__/hooks/SessionCleanup.hook.ts'",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "bun '__MYOS_HOME__/hooks/TokenLog.hook.ts'",
+            "timeout": 30,
+            "async": true
+          }
+        ]
+      }
+    ]
+  }
+}

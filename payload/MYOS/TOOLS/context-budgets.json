@@ -1,0 +1,12 @@
+{
+  "_doc": "Per-file byte budgets for myos's always-on context stack: the files Claude Code loads every turn (CLAUDE.md natively, MYOS_SYSTEM_PROMPT.md via --append-system-prompt-file) plus the Algorithm, which every build run reads. BudgetCheck.ts fails when a file exceeds its budget: backpressure against re-accretion. Budgets are ceilings, not targets: to add, first prune. Raising a budget is a deliberate decision recorded in git, not a silent bump.",
+  "_convention": "path is relative to ~/.myos (the myos install root) ; maxBytes is the hard ceiling. Files listed here that don't exist report MISSING and do not fail the check.",
+  "_addingFiles": "Add a row whenever you make a file always-on (an @-import in CLAUDE.md, or a new --append-system-prompt-file target). Skills, workflows, MYOS/RULES and MYOS/DOCUMENTATION load on demand and are deliberately NOT budgeted.",
+  "totalMaxBytes": 30000,
+  "_totalDoc": "Hard ceiling on the SUM of the rows below (per-file caps alone never bound the whole stack). The three ceilings sum to 24KB; the other 6KB is reserved for the user owned MYOS/USER/PROJECTS.md index that CLAUDE.md imports (its 6KB ceiling is not a row here because every row must ship in the payload).",
+  "budgets": [
+    { "path": "CLAUDE.md", "maxBytes": 6000, "note": "operational rules + routing table only; everything else loads on demand" },
+    { "path": "MYOS/MYOS_SYSTEM_PROMPT.md", "maxBytes": 6000, "note": "constitutional; survives compaction, so every byte is paid for on every turn" },
+    { "path": "MYOS/ALGORITHM/v1.0.0.md", "maxBytes": 12000, "note": "read at the start of every build run; bump this row when LATEST moves" }
+  ]
+}

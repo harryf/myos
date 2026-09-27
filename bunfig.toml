@@ -1,0 +1,16 @@
+[test]
+# The global test timeout lives in test/preload.ts (setDefaultTimeout): bun
+# 1.3.8 silently ignores a `timeout` key here, verified 2026-07-30.
+preload = ["./test/preload.ts"]
+pathIgnorePatterns = [
+  "**/node_modules/**",
+  "**/MYOS/MEMORY/**",
+  "**/.git/**",
+  "**/upgrade-backups/**",
+  # scratch copies the harness makes of skill trees (tempCopy)
+  "**/.test-tmp/**",
+]
+coverage = false
+coverageReporter = ["text"]
+coverageDir = "coverage"
+coveragePathIgnorePatterns = ["**/node_modules/**", "**/test/**", "**/MYOS/MEMORY/**"]

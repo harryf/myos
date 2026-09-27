@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# myos: launch Claude Code with the myos toolkit loaded from ~/.myos.
+# Bare `claude` remains untouched: isolation is via CLAUDE_CONFIG_DIR.
+set -euo pipefail
+
+MYOS_HOME="${MYOS_HOME:-$HOME/.myos}"
+
+if [[ "${1:-}" == "--version" || "${1:-}" == "-v" ]]; then
+  if [[ -f "$MYOS_HOME/MYOS/VERSION" ]]; then
+    echo "myos v$(cat "$MYOS_HOME/MYOS/VERSION")"
+  else
+    echo "myos (not installed: run install.sh)"
+  fi
+  exit 0
+fi
+
+if [[ ! -d "$MYOS_HOME" ]]; then
+  echo "myos: $MYOS_HOME not found. Run install.sh from the myos repo first." >&2
+  exit 1
+fi
+
+export CLAUDE_CONFIG_DIR="$MYOS_HOME"
+
+ARGS=()
+SYSTEM_PROMPT="$MYOS_HOME/MYOS/MYOS_SYSTEM_PROMPT.md"
+if [[ -f "$SYSTEM_PROMPT" ]]; then
+  ARGS+=(--append-system-prompt-file "$SYSTEM_PROMPT")
+fi
+
+# Project-settings shield. Claude Code loads <project>/.claude/settings.json ON TOP of the
+# CLAUDE_CONFIG_DIR settings. At cwd=$HOME that file IS another install's config (another Claude harness:
+# statusline, model, hooks): same when running inside another install's directory. Exclude
+# project settings there; everywhere else, repo-level .claude settings load normally.
+# Override: MYOS_SETTING_SOURCES=user,project,local myos
+if [[ -n "${MYOS_SETTING_SOURCES:-}" ]]; then
+  ARGS+=(--setting-sources "$MYOS_SETTING_SOURCES")
+elif [[ "$PWD" == "$HOME" && -e "$HOME/.claude/settings.json" ]] || [[ "$PWD" == "$HOME"/.claude* ]]; then
+  echo "myos: running from $PWD: excluding project settings here (they belong to another Claude install). cd into a project dir to use repo-level .claude settings." >&2
+  ARGS+=(--setting-sources user)
+fi
+
+# ${ARGS[@]+…} guards the empty-array case under bash 3.2 `set -u`
+exec claude ${ARGS[@]+"${ARGS[@]}"} "$@"

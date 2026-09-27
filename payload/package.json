@@ -1,0 +1,9 @@
+{
+  "name": "myos-runtime",
+  "private": true,
+  "type": "module",
+  "description": "Shared runtime dependencies for myos hooks and MYOS/TOOLS scripts. Copied to ~/.myos/package.json by install.sh so `bun install` resolves node_modules for both ~/.myos/hooks/ and ~/.myos/MYOS/.",
+  "dependencies": {
+    "yaml": "^2.8.2"
+  }
+}

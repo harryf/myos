@@ -1,0 +1,160 @@
+name: CI
+
+# Runs the verification recipes documented in DEVELOPMENT.md on every push and
+# pull request. Anything that fails here would also fail for Harry running
+# ./install.sh, so the job is the install, not a proxy for it.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          # Pinned to the version myos is developed against; the product is "run install.sh with bun".
+          bun-version: "1.4.2"
+
+      - name: No em dash anywhere (U+2014 is banned in code, comments, docs and file names)
+        run: |
+          if git ls-files -z | xargs -0 perl -CSD -ne 'if (/\x{2014}/) { print "$ARGV:$.: em dash\n"; $found = 1 } END { exit($found ? 1 : 0) }'; then
+            echo "no em dash in tracked files"
+          else
+            echo "em dash found; write \\u2014 in code, rephrase in prose"; exit 1
+          fi
+          if git ls-files -z | perl -CS -0 -ne 'exit 1 if /\x{2014}/'; then :; else echo "em dash in a file name"; exit 1; fi
+
+      - name: Contraband gate (no voice, notifications, servers or life coaching in shipped code)
+        run: bun Tools/ContrabandCheck.ts
+
+      - name: Permission rules gate (a silently pruned rule is not a shipped rule)
+        run: bun Tools/PermissionRulesCheck.ts
+
+      - name: Tool and test parity (a tool with no test is a red build)
+        run: bun Tools/TestCoverageCheck.ts
+
+      - name: Test suite dependencies
+        run: bun install --frozen-lockfile || bun install
+
+      - name: Test suite
+        run: bun test
+
+      - name: Writing style gate (house style is enforced, not remembered)
+        run: |
+          bun payload/skills/Writing/Tools/StyleCheck.ts --profile prose \
+            README.md MIGRATION.md DEVELOPMENT.md CHANGELOG.md payload/CLAUDE.md \
+            payload/commands payload/agents payload/hooks/README.md \
+            payload/MYOS/MYOS_SYSTEM_PROMPT.md payload/MYOS/RULES payload/MYOS/USER
+          bun payload/skills/Writing/Tools/StyleCheck.ts --profile docs \
+            payload/MYOS/DOCUMENTATION payload/MYOS/ALGORITHM
+          bun payload/skills/Writing/Tools/StyleCheck.ts --profile dashes payload/skills
+
+      - name: Context budgets (CLAUDE.md and the system prompt stay under their ceilings)
+        run: bun payload/MYOS/TOOLS/BudgetCheck.ts
+
+      - name: Shell syntax (installer, launcher, pre commit hook, shell hooks)
+        run: |
+          bash -n install.sh
+          bash -n bin/myos
+          bash -n .githooks/pre-commit
+          for sh in payload/hooks/*.hook.sh; do bash -n "$sh"; done
+
+      - name: Unshipped tool references (every MYOS/TOOLS/*.ts mentioned must exist)
+        run: |
+          FAIL=0
+          for t in $(grep -rhoE "MYOS/TOOLS/[A-Za-z0-9_]+\.ts" payload/agents payload/skills payload/hooks payload/commands payload/CLAUDE.md payload/MYOS/ALGORITHM payload/MYOS/RULES | sort -u); do
+            if [ ! -f "payload/$t" ]; then
+              echo "MISSING: payload/$t is referenced but not shipped"
+              FAIL=1
+            fi
+          done
+          exit $FAIL
+
+      - name: Install smoke test (a real ~/.myos on the ephemeral runner)
+        run: |
+          ./install.sh
+          test -f "$HOME/.myos/MYOS/VERSION"
+          test -f "$HOME/.myos/settings.json"
+          test -f "$HOME/.myos/MYOS/USER/CONFIG/MYOS_CONFIG.toml"
+          test -f "$HOME/.myos/MYOS/USER/CONFIG/trial.json"
+          test -d "$HOME/.myos/MYOS/MEMORY/WORK"
+          "$HOME/.myos/bin/myos" --version | grep -q "myos v$(cat VERSION)"
+          if grep -q '"type": "http"' "$HOME/.myos/settings.json"; then echo "http hook registered"; exit 1; fi
+
+      - name: Install idempotency (a second run must not fail or clobber user space)
+        run: |
+          echo "user-config-marker" >> "$HOME/.myos/MYOS/USER/CONVENTIONS.md"
+          cp "$HOME/.myos/settings.json" /tmp/settings.before
+          ./install.sh
+          grep -q "user-config-marker" "$HOME/.myos/MYOS/USER/CONVENTIONS.md"
+          cmp /tmp/settings.before "$HOME/.myos/settings.json"
+
+      - name: Hook import sweep (installed tree)
+        run: |
+          cd "$HOME/.myos"
+          FAIL=0
+          for h in hooks/*.hook.ts; do
+            if ! OUT=$(bun build "$h" --target=bun --outfile=/dev/null 2>&1); then
+              echo "IMPORT FAILURE in $h:"
+              echo "$OUT"
+              FAIL=1
+            fi
+          done
+          exit $FAIL
+
+      - name: Upgrade path (a new release's settings reach an existing install)
+        run: |
+          bun -e '
+            const f = process.env.HOME + "/.myos/settings.json";
+            const s = JSON.parse(require("fs").readFileSync(f, "utf8"));
+            s.env.BASH_DEFAULT_TIMEOUT_MS = "999999";
+            s.env.MY_OWN = "keepme";
+            require("fs").writeFileSync(f, JSON.stringify(s, null, 2) + "\n");'
+          bun -e '
+            const f = "payload/settings.template.json";
+            const s = JSON.parse(require("fs").readFileSync(f, "utf8"));
+            s.hooks.SessionStart[0].hooks.push({
+              type: "command",
+              command: "bun \x27__MYOS_HOME__/hooks/TimeContext.hook.ts\x27",
+              timeout: 5,
+            });
+            require("fs").writeFileSync(f, JSON.stringify(s, null, 2) + "\n");'
+          cp "$HOME/.myos/settings.json" /tmp/settings.before-dry
+          ./install.sh --dry-run
+          cmp /tmp/settings.before-dry "$HOME/.myos/settings.json"
+          ./install.sh
+          bun -e '
+            const s = JSON.parse(require("fs").readFileSync(process.env.HOME + "/.myos/settings.json", "utf8"));
+            const fail = (m) => { console.error("FAIL " + m); process.exitCode = 1; };
+            if (!JSON.stringify(s.hooks.SessionStart).includes("TimeContext.hook.ts")) fail("new release hook not registered");
+            if (s.env.BASH_DEFAULT_TIMEOUT_MS !== "999999") fail("a user value was overwritten");
+            if (s.env.MY_OWN !== "keepme") fail("a user only key was dropped");'
+          git checkout -- payload/settings.template.json
+
+      - name: Upgrade guard (refuses a config dir that is not a myos install)
+        run: |
+          mkdir -p /tmp/foreign/skills/Mine
+          echo keep-me > /tmp/foreign/skills/Mine/SKILL.md
+          if MYOS_HOME=/tmp/foreign ./install.sh; then
+            echo "FAIL: installed into a directory that is not ours"
+            exit 1
+          fi
+          grep -q keep-me /tmp/foreign/skills/Mine/SKILL.md
+          test ! -f /tmp/foreign/install.log
+
+      - name: Statusline smoke test (synthetic stdin)
+        run: |
+          export CLAUDE_CONFIG_DIR="$HOME/.myos"
+          OUT=$(echo '{"model":{"display_name":"CI"},"workspace":{"current_dir":"'"$PWD"'"},"context_window":{"used_percentage":34,"context_window_size":200000,"total_input_tokens":68000}}' \
+            | bun "$HOME/.myos/MYOS/statusline.ts")
+          echo "$OUT"
+          echo "$OUT" | grep -q "myos v$(cat VERSION)"
+          echo "$OUT" | grep -q "ctx 34%"

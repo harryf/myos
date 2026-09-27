@@ -1,0 +1,10 @@
+{
+  "name": "myos-dev",
+  "private": true,
+  "type": "module",
+  "description": "Dev-only manifest for the test suite. NOT shipped: the product is payload/, which has no root package.json and needs none. This exists because `bun test` (unlike `bun run`) does not auto-install, so a tool whose deps are deferred to first use cannot be imported in a test without them resolvable here. Without `bun install` the dependent tests skip cleanly and say why.",
+  "devDependencies": {
+    "handlebars": "^4.7.8",
+    "yaml": "^2.8.2"
+  }
+}

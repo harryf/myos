@@ -1,0 +1,28 @@
+# MYOS_CONFIG.toml: your values for myos.
+#
+# install.sh copies this file to MYOS/USER/CONFIG/MYOS_CONFIG.toml on the first
+# install and never overwrites it afterwards. Edit that copy, not this one.
+# Read by MYOS/TOOLS/MyosConfig.ts (typed loader) and, for [gates], by the hooks
+# directly (hooks/lib/gates.ts), so keep the key names as they are.
+
+[principal]
+name = "Harry"
+timezone = "Europe/Zurich"
+# pronunciation = "Harry"
+
+[paths]
+# All optional; ~ is expanded. Defaults shown.
+code = "~/Code"
+# user_dir = "~/.myos/MYOS/USER"
+# memory_dir = "~/.myos/MYOS/MEMORY"
+
+[tokens]
+# Where MyTokens keeps its session ledger. Default: <memory_dir>/OBSERVABILITY/TOKENS
+# dir = "~/.myos/MYOS/MEMORY/OBSERVABILITY/TOKENS"
+
+[gates]
+# The hooks read this to decide whether the ISA gates may block a response.
+# false = log only (the trial default: read the gate logs, arm one gate at a time).
+blocking = false
+# VerificationGate ships armed: "block" (default), "log" or "off".
+# verification = "block"

@@ -1,0 +1,7 @@
+{
+  "started": "2026-09-28",
+  "gate_review_due": "2026-10-12",
+  "doctrine_review_due": "2026-10-28",
+  "gate_review_done": false,
+  "doctrine_review_done": false
+}

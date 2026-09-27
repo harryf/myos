@@ -1,0 +1,108 @@
+name: Release
+
+# Fires on version tags (vX.Y.Z). Enforces the release doctrine from DEVELOPMENT.md,
+# then publishes a GitHub Release with notes extracted from CHANGELOG.md.
+# A release that fails any gate here does not ship: fix, re-tag, push again.
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          # Keep in lockstep with ci.yml: reproducible release path
+          bun-version: "1.3.8"
+
+      - name: Gate 1: ContrabandCheck (fork constraints)
+        run: bun Tools/ContrabandCheck.ts
+
+      - name: Gate 1b: PermissionRulesCheck (permission rules actually take effect)
+        run: bun Tools/PermissionRulesCheck.ts
+
+      - name: Gate 1c: tool test parity (every shipped tool has a test)
+        run: bun Tools/TestCoverageCheck.ts
+
+      - name: Gate 1d: tool test suite
+        # Re-run on the tagged commit rather than trusting a prior CI run.
+        # Dependency-gated tests skip on a runner and print why (see test/README.md).
+        run: |
+          bun install --frozen-lockfile || bun install
+          bun test
+
+      - name: Gate 2: tag matches VERSION file
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          FILE_VERSION="$(tr -d '[:space:]' < VERSION)"
+          if [ "$TAG_VERSION" != "$FILE_VERSION" ]; then
+            echo "Tag $GITHUB_REF_NAME does not match VERSION file ($FILE_VERSION)."
+            echo "Update VERSION + CHANGELOG.md, commit, then re-tag (see DEVELOPMENT.md → Releases)."
+            exit 1
+          fi
+
+      - name: Gate 3: CHANGELOG has an entry for this version
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          grep -Eq "^## ${VERSION}( |$)" CHANGELOG.md || {
+            echo "CHANGELOG.md has no '## ${VERSION}' entry."
+            exit 1
+          }
+
+      - name: Gate 4: shell syntax
+        # Release fires on tag push independently of CI, so it re-runs the cheap
+        # high-value CI gates itself rather than trusting a prior CI run.
+        run: |
+          bash -n install.sh
+          bash -n bin/myos
+          for sh in payload/hooks/*.hook.sh; do bash -n "$sh"; done
+
+      - name: Gate 5: install smoke test on a clean runner
+        run: |
+          ./install.sh
+          test -f "$HOME/.myos/MYOS/VERSION"
+          INSTALLED="$("$HOME/.myos/bin/myos" --version)"
+          echo "$INSTALLED"
+          echo "$INSTALLED" | grep -q "myos v${GITHUB_REF_NAME#v}"
+
+      - name: Gate 6: hook import sweep (installed tree)
+        run: |
+          cd "$HOME/.myos"
+          FAIL=0
+          for h in hooks/*.hook.ts; do
+            if ! OUT=$(bun build "$h" --target=bun --outfile=/dev/null 2>&1); then
+              echo "IMPORT FAILURE in $h:"
+              echo "$OUT"
+              FAIL=1
+            fi
+          done
+          exit $FAIL
+
+      - name: Extract release notes from CHANGELOG.md
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          awk -v ver="$VERSION" '
+            $0 ~ "^## " ver "( |$)" { on=1; next }
+            on && /^## / { exit }
+            on { print }
+          ' CHANGELOG.md > /tmp/release-notes.md
+          if [ ! -s /tmp/release-notes.md ]; then
+            echo "Extracted release notes are empty." && exit 1
+          fi
+          cat /tmp/release-notes.md
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "myos $GITHUB_REF_NAME" \
+            --notes-file /tmp/release-notes.md \
+            --verify-tag
