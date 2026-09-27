@@ -22,23 +22,23 @@ jobs:
           # Keep in lockstep with ci.yml: reproducible release path
           bun-version: "1.3.8"
 
-      - name: Gate 1: ContrabandCheck (fork constraints)
+      - name: Gate 1, ContrabandCheck (fork constraints)
         run: bun Tools/ContrabandCheck.ts
 
-      - name: Gate 1b: PermissionRulesCheck (permission rules actually take effect)
+      - name: Gate 1b, PermissionRulesCheck (permission rules actually take effect)
         run: bun Tools/PermissionRulesCheck.ts
 
-      - name: Gate 1c: tool test parity (every shipped tool has a test)
+      - name: Gate 1c, tool test parity (every shipped tool has a test)
         run: bun Tools/TestCoverageCheck.ts
 
-      - name: Gate 1d: tool test suite
+      - name: Gate 1d, tool test suite
         # Re-run on the tagged commit rather than trusting a prior CI run.
         # Dependency-gated tests skip on a runner and print why (see test/README.md).
         run: |
           bun install --frozen-lockfile || bun install
           bun test
 
-      - name: Gate 2: tag matches VERSION file
+      - name: Gate 2, tag matches VERSION file
         run: |
           TAG_VERSION="${GITHUB_REF_NAME#v}"
           FILE_VERSION="$(tr -d '[:space:]' < VERSION)"
@@ -48,7 +48,7 @@ jobs:
             exit 1
           fi
 
-      - name: Gate 3: CHANGELOG has an entry for this version
+      - name: Gate 3, CHANGELOG has an entry for this version
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           grep -Eq "^## ${VERSION}( |$)" CHANGELOG.md || {
@@ -56,7 +56,7 @@ jobs:
             exit 1
           }
 
-      - name: Gate 4: shell syntax
+      - name: Gate 4, shell syntax
         # Release fires on tag push independently of CI, so it re-runs the cheap
         # high-value CI gates itself rather than trusting a prior CI run.
         run: |
@@ -64,7 +64,7 @@ jobs:
           bash -n bin/myos
           for sh in payload/hooks/*.hook.sh; do bash -n "$sh"; done
 
-      - name: Gate 5: install smoke test on a clean runner
+      - name: Gate 5, install smoke test on a clean runner
         run: |
           ./install.sh
           test -f "$HOME/.myos/MYOS/VERSION"
@@ -72,7 +72,7 @@ jobs:
           echo "$INSTALLED"
           echo "$INSTALLED" | grep -q "myos v${GITHUB_REF_NAME#v}"
 
-      - name: Gate 6: hook import sweep (installed tree)
+      - name: Gate 6, hook import sweep (installed tree)
         run: |
           cd "$HOME/.myos"
           FAIL=0

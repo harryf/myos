@@ -28,7 +28,7 @@ iteration: 2             # only when a completed ISA is reopened
 ---
 ```
 
-Never written on new ISAs: `effort`, `effort_source`, `mode`, `algorithm_config`, `response_mode`. Their presence marks a legacy ISA (see below).
+Never written on new ISAs: `effort`, `effort_source`, `mode`, `algorithm_config`, `response_mode`. An ISA that carries any of them is a legacy ISA (see below).
 
 ## Sections, in this order
 
