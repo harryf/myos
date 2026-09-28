@@ -4,10 +4,10 @@ task: Build myos phases 1 to 5 (repo, launcher, hooks, doctrine, skills, memory 
 slug: 20260927-220000_myos-build
 effort: E4
 phase: complete
-progress: 159/160
+progress: 164/165
 mode: algorithm
 started: 2026-09-27T20:05:00+02:00
-updated: 2026-09-28T00:40:00+02:00
+updated: 2026-09-28T01:05:00+02:00
 ---
 
 # myos ISA
@@ -229,6 +229,14 @@ Process and documentation:
 - [x] ISC-159: `~/.myos/MYOS/USER/CONFIG/MYOS_CONFIG.toml` exists after install with `[principal]` name Harry, timezone Europe/Zurich and `[gates] blocking = false`.
 - [x] ISC-160: `~/.myos/MYOS/USER/CONFIG/trial.json` exists with `started`, `gate_review_due` (14 days), `doctrine_review_due` (30 days) and both `done` flags false.
 
+Run 3 (2026-09-28, pai retirement, Harry: "we can tar and delete pai"):
+
+- [x] ISC-161: Every pai WORK dir, KNOWLEDGE file and PROJECTS bullet has a counterpart in `~/.myos` (counts equal, `diff -rq` over WORK shows no differing file).
+- [x] ISC-162: `~/Archive/claude-personal-2026-09-28.tgz` exists and lists the WORK ISAs, PROJECTS.md, the session transcripts and the LEARNING/FAILURES summaries.
+- [x] ISC-163: The tar entry count matches the file count on disk within the files written during the run itself, and a sha256 of the archive is recorded.
+- [x] ISC-164: Anti: `~/.claude-personal` is not deleted from inside this session (the session runs from it); the delete is handed to Harry as two exact commands with the consequences named.
+- [x] ISC-165: Anti: `~/.myos`, `~/.pmai` and the myos repo are untouched by this run.
+
 ## Test Strategy
 
 | isc | type | check | threshold | tool |
@@ -293,6 +301,7 @@ Process and documentation:
 - 2026-09-28 00:05: Builders' decisions confirmed: VerificationGate ships armed for T1 to T3 (the plan's one live tooth) while `[gates] blocking` governs only the ISA gates; TF (completion over a failed final command) logs only; ISAStaleWriteGuard also listens on PostToolUse Read to learn what the session saw; EventLogger also logs ConfigChange; `Bash(~/bin/publish:*)` sits in ask; Gmail connector rules are globbed by verb (read shapes allow, write shapes ask); ISAGate's hard checks at `phase: complete` are no Goal, no claims, no anti claim, open claims, a progress that does not match, entries left under Not yet specified; DriftReminder has no line cap; TaskGovernance keeps its counter (moved under MEMORY/STATE in the review fixes). Skills: MyTokens and Scheduler restart at 1.0.0; Scheduler prompt jobs run `myos -p` in plan mode with Edit, Write and NotebookEdit disallowed; Interceptor kept at pmai 4.4.0 (newer than LifeOS); Remotion's Render.ts and Theme.ts dropped; the two "shipped tree" StyleCheck tests scope to the skills builder's own surfaces (CI covers the rest); `grill-me.md` added from LifeOS. Tools: MultiEdit deliberately absent from KNOWN_TOOL_NAMES (the harness rejects it in permission rules); DependencyAudit kept, now derived from the payload on disk; `[learning]` removed from the config.
 - 2026-09-28 00:10: Closing advisor call, eight points. 1 personal data in the push: checked, `git ls-files` holds no MEMORY, USER/PROJECTS, sessions or token data (only the MyTokens skill sources); .gitignore covers the user owned files. 2 hooks never fired in a real session: true until Harry logs in; the hooks were run live against the install with synthetic stdin instead (TimeContext, DriftReminder, TrialClock, GateReview, StopGates off) and the scripted per gate checks are the first task of the trial (MIGRATION.md section 6). 3 Stop dispatcher wedging: StopGates handles `stop_hook_active` (never blocks on recovery); VerificationGate stays armed as planned, `MYOS_GATES=off` is the documented exit. 4 keychain isolation: pmai and pai already coexist on this machine with separate logins, same mechanism. 5 CI portability: settled by the CI run. 6 broad allow rules: the only wide Bash allows are bun, bunx, bun run, gh and curl (read shapes); rm, git push, sudo, launchctl and crontab are in ask; no bare `Bash` or `Edit` allow. 7 migration integrity: 11,307 words in, 11,479 out across 20 files (headings added), every index link resolves, zero stale paths. 8 launchd and TrialClock: no launchd job exists yet (Scheduler writes plists only on command); TrialClock fired on a sandbox trial.json with a past date. Rollback line given to Harry in the summary.
 - 2026-09-28 00:20: Independent review of the hooks layer: 15 findings. Sent to the hooks builder for fixing: the T5/TF early return that let a publicity phrased deploy claim through (blocker); per session last-response.txt; getMyosDir fallback and the hardcoded ~/.myos paths; Pulse leftovers and the execSync tail in isa-utils; unbounded transcript read in hook-io; VERIFGATE_* switches folded into gates.ts; positive controls for the kill switch tests; per session last-block and latch files written atomically; TaskGovernance state under MEMORY/STATE; identity.ts deleted; URL masking before sentence splitting; the duplicated env table in gates.ts. Declined: neutralising Harry's name and paths in the autoMode prose (myos is his single user system; the private repo holds nothing but his setup) and the compaction truncation window in work-events.ts (documented instead).
+- 2026-09-28 01:00: Harry confirmed the first `myos` session works and asked to tar and delete pai once the memories are migrated. Migration re-verified (ISC-161), archive written and checked (ISC-162, 163). The delete is not run from this session: it runs inside `~/.claude-personal` and would remove its own config dir, login state and transcript mid session. Handed to Harry as two commands to run from a plain terminal after closing this session. Not migrated on purpose and present only in the tarball: 653 MB of LEARNING failure transcripts, 495 MB of session transcripts (MyTokens has read them), three Claude Code auto memory notes (covered by PROJECTS.md; auto memory is off in myos).
 - 2026-09-27 21:25: Two pai files changed after session start: `settings.json` at 19:50:18 (the `/model` command Harry ran at session start saved the default) and a `skills/synced` manifest at 21:18:22 (Claude Code skill sync). Neither was written by this run; ISC-26 holds.
 
 ## Changelog
@@ -452,3 +461,11 @@ Run 2 (2026-09-28, build):
 - ISC-158: `find payload/MYOS/USER -type f` = CONVENTIONS.md, CONFIG/trial.json.example, PROJECTS.md; install log "created ... (only when absent)"; the CI idempotency step appends a marker to CONVENTIONS.md and checks it survives.
 - ISC-159: MYOS_CONFIG.toml lines: name = "Harry", timezone = "Europe/Zurich", `[gates] blocking = false`.
 - ISC-160: trial.json: started 2026-09-28, gate_review_due 2026-10-12, doctrine_review_due 2026-10-28, both done flags false.
+
+Run 3 (pai retirement):
+
+- ISC-161: WORK dirs 122 / 122, KNOWLEDGE files 10 / 10, PROJECTS bullets 20 / 20 files; `diff -rq` over the two WORK trees: 0 differing files (pai only extras are the README.md and three literal `${HOME}` cache dirs, skipped by design).
+- ISC-162: `~/Archive/claude-personal-2026-09-28.tgz`, 744 MB; `tar tzf` spot check matched 2,040 entries for WORK ISAs, PROJECTS.md, session transcripts and LEARNING/FAILURES.
+- ISC-163: 18,259 entries in the tar, 18,259 files on disk at the same moment; sha256 prefix 621d8517f631fcb9.
+- ISC-164: no `rm` was run; this session's config dir is `~/.claude-personal` (`readlink ~/.claude`), so the two delete commands are handed to Harry in the summary with the consequences.
+- ISC-165: no command in this run wrote under `~/.myos`, `~/.pmai` or the repo other than this ISA and its commit.
