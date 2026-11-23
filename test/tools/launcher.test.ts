@@ -139,6 +139,71 @@ describe("the settings sources shield", () => {
   });
 });
 
+describe("remote control", () => {
+  async function inProject(name: string, args: string[], extra: Record<string, string | undefined> = {}) {
+    using home = sandbox(name);
+    const project = realpathSync(home.mkdir("Code/proj"));
+    return await launch(home, args, project, extra);
+  }
+
+  test("--rc becomes --remote-control, with or without a name", async () => {
+    expect((await inProject("rc-bare", ["--rc"])).args).toEqual(["--remote-control"]);
+    expect((await inProject("rc-name", ["--rc", "desk"])).args).toEqual(["--remote-control", "desk"]);
+    expect((await inProject("rc-eq", ["--rc=desk"])).args).toEqual(["--remote-control=desk"]);
+  });
+
+  test("--remote-control passes through and is never asked about", async () => {
+    const result = await inProject("rc-full", ["--remote-control"], { MYOS_ASSUME_TTY: "1" });
+    expect(result.args).toEqual(["--remote-control"]);
+    expect(result.stderr).not.toContain("remote control?");
+  });
+
+  test("a terminal start with no flag asks, and yes turns it on", async () => {
+    using home = sandbox("rc-ask-yes");
+    const project = realpathSync(home.mkdir("Code/proj"));
+    const env = makeTestEnv({ HOME: home.real, MYOS_HOME: `${home.real}/.myos`, PATH: `${home.real}/stub:/usr/bin:/bin`, MYOS_ASSUME_TTY: "1", MYOS_REMOTE_CONTROL: undefined });
+    const result = await run([LAUNCHER], { env, cwd: project, stdin: "y\n" });
+    expect(result.stderr).toContain("Should I enable remote control? [y/N]");
+    expect(result.stdout).toContain("ARG=--remote-control");
+  });
+
+  test("a terminal start with no flag asks, and Enter leaves it off", async () => {
+    using home = sandbox("rc-ask-no");
+    const project = realpathSync(home.mkdir("Code/proj"));
+    const env = makeTestEnv({ HOME: home.real, MYOS_HOME: `${home.real}/.myos`, PATH: `${home.real}/stub:/usr/bin:/bin`, MYOS_ASSUME_TTY: "1", MYOS_REMOTE_CONTROL: undefined });
+    const result = await run([LAUNCHER], { env, cwd: project, stdin: "\n" });
+    expect(result.stderr).toContain("Should I enable remote control?");
+    expect(result.stdout).not.toContain("remote-control");
+  });
+
+  test("--no-rc skips the question and is not passed to claude", async () => {
+    const result = await inProject("rc-no", ["--no-rc"], { MYOS_ASSUME_TTY: "1" });
+    expect(result.args).toEqual([]);
+    expect(result.stderr).not.toContain("remote control?");
+  });
+
+  test("MYOS_REMOTE_CONTROL=on turns it on without asking, off leaves it off", async () => {
+    expect((await inProject("rc-env-on", [], { MYOS_REMOTE_CONTROL: "on" })).args).toEqual(["--remote-control"]);
+    expect((await inProject("rc-env-off", [], { MYOS_REMOTE_CONTROL: "off", MYOS_ASSUME_TTY: "1" })).args).toEqual([]);
+  });
+
+  test("-p, --help and subcommands never ask and never get it from the env", async () => {
+    for (const args of [["-p", "hi"], ["--help"], ["mcp", "list"], ["doctor"]]) {
+      const asked = await inProject(`rc-headless-${args[0]}`, args, { MYOS_ASSUME_TTY: "1" });
+      expect(asked.stderr).not.toContain("remote control?");
+      expect(asked.args).toEqual(args);
+      const env = await inProject(`rc-headless-env-${args[0]}`, args, { MYOS_REMOTE_CONTROL: "on" });
+      expect(env.args).toEqual(args);
+    }
+  });
+
+  test("no terminal means no question and no remote control", async () => {
+    const result = await inProject("rc-notty", []);
+    expect(result.args).toEqual([]);
+    expect(result.stderr).not.toContain("remote control?");
+  });
+});
+
 describe("bash 3.2 safety", () => {
   test("with no args at all the empty-array guard holds under set -u", async () => {
     using home = sandbox("empty");

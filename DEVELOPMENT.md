@@ -19,7 +19,7 @@ myos/
     commands/              /cs, /myos
     MYOS/                  VERSION (written at install), MYOS_SYSTEM_PROMPT.md, statusline.ts,
                            ALGORITHM/, RULES/, DOCUMENTATION/, TOOLS/, USER/ (scaffold only)
-  bin/myos                 launcher: CLAUDE_CONFIG_DIR=~/.myos, system prompt append, settings shield
+  bin/myos                 launcher: CLAUDE_CONFIG_DIR=~/.myos, system prompt append, settings shield, Remote Control question
   install.sh               installer and upgrader (see Installer semantics)
   Tools/                   repo gates and Release.ts (never shipped)
   test/                    bun test suite: harness, corpus/, hooks/, tools/, skills/, gates/, doctrine/, fixtures/

@@ -16,6 +16,8 @@ cd ~/Code/some-project && myos
 
 The first `myos` run asks for one interactive login (auth is per config dir). `myos --version` prints the installed version. Upgrading is `git pull && ./install.sh`; user data under `~/.myos/MYOS/MEMORY` and `~/.myos/MYOS/USER` is never touched. Removal is `rm -rf ~/.myos ~/.local/bin/myos`; nothing else on the machine changes.
 
+Remote Control: `myos --rc [name]` starts with it on, `myos --no-rc` starts without asking, and a plain `myos` in a terminal asks "Should I enable remote control? [y/N]". `MYOS_REMOTE_CONTROL=on|off|ask` sets the answer ahead. Mid session, `/remote-control` (or `/rc`) turns it on. Headless runs (`-p`), `--help` and subcommands never ask.
+
 ## What is in it
 
 | Piece | Where |

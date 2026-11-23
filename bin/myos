@@ -39,5 +39,40 @@ elif [[ "$PWD" == "$HOME" && -e "$HOME/.claude/settings.json" ]] || [[ "$PWD" ==
   ARGS+=(--setting-sources user)
 fi
 
+# Remote Control. `--rc [name]` is short for claude's `--remote-control [name]`;
+# `--no-rc` is myos only and skips the question. An interactive session started
+# with neither asks once, default no. MYOS_REMOTE_CONTROL=on|off|ask (default ask)
+# sets the answer ahead. Mid session, `/remote-control` (alias `/rc`) turns it on.
+# Never asked for -p, --help, a subcommand, or when stdin or stdout is not a terminal.
+RC_STATE="${MYOS_REMOTE_CONTROL:-ask}"
+HEADLESS=""
+PASS=()
+for a in "$@"; do
+  case "$a" in
+    --rc) PASS+=(--remote-control); RC_STATE=given ;;
+    --rc=*) PASS+=("--remote-control=${a#--rc=}"); RC_STATE=given ;;
+    --remote-control|--remote-control=*) PASS+=("$a"); RC_STATE=given ;;
+    --no-rc) RC_STATE=off ;;
+    -p|--print|-h|--help) PASS+=("$a"); HEADLESS=1 ;;
+    *) PASS+=("$a") ;;
+  esac
+done
+case "${PASS[0]:-}" in
+  agents|attach|auth|auto-mode|config|doctor|gateway|import|install|logs|mcp|plugin|plugins|purge|respawn|rm|setup-token|stop|kill|ultrareview|update|upgrade) HEADLESS=1 ;;
+esac
+# Headless runs and subcommands never get Remote Control unless asked for by flag.
+[[ -n "$HEADLESS" && "$RC_STATE" != given ]] && RC_STATE=off
+if [[ "$RC_STATE" == ask ]]; then
+  if [[ -n "${MYOS_ASSUME_TTY:-}" ]] || [[ -t 0 && -t 1 ]]; then
+    printf "myos: Should I enable remote control? [y/N] " >&2
+    REPLY=""
+    if [[ -n "${MYOS_ASSUME_TTY:-}" ]]; then read -r REPLY || true; else read -r REPLY </dev/tty || true; fi
+    case "$REPLY" in [yY]|[yY][eE][sS]) RC_STATE=on ;; *) RC_STATE=off ;; esac
+  else
+    RC_STATE=off
+  fi
+fi
+[[ "$RC_STATE" == on ]] && ARGS+=(--remote-control)
+
 # ${ARGS[@]+…} guards the empty-array case under bash 3.2 `set -u`
-exec claude ${ARGS[@]+"${ARGS[@]}"} "$@"
+exec claude ${ARGS[@]+"${ARGS[@]}"} ${PASS[@]+"${PASS[@]}"}
