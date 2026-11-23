@@ -32,6 +32,7 @@ Interceptor is a Chrome extension that operates through the actual browser UI pl
 myos uses Interceptor for browser automation. The macOS and iOS surfaces (Swift bridge, TCC grants, VM lifecycle, the iOS runner) work when installed but no myos workflow depends on them.
 
 - **Dedicated browser profile required.** Never run against Harry's Default profile; see the Isolation Doctrine below. The test profile is set up once (`Workflows/LaunchTestProfile.md`).
+- **Machine notes.** Read `~/.myos/MYOS/USER/CUSTOMIZATIONS/SKILLS/Interceptor/NOTES.md` when it exists: it names the profile, context and gotchas of this machine and wins over the generic setup here.
 - **Harry mostly works in Brave.** The extension and the native messaging manifest need registering for each browser that should be driven.
 
 ## When the extension is disconnected

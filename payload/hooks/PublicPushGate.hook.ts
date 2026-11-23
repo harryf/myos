@@ -110,10 +110,17 @@ export function visibility(slug: string): string {
   return known;
 }
 
-/** Deny scan of HEAD and local history. Matches or null; throws when the scan fails. */
-function scan(dir: string, patterns: string[]): string | null {
+/**
+ * Deny scan of HEAD and local history. Matches or null; throws when the scan fails.
+ * ignoreCase is for Harry's own patterns only: the built-in secret shapes are case-sensitive by
+ * definition, and with -i "AKIA" plus 16 upper-case characters matched lower-case base64 image
+ * data (an embedded map tile blocked every push on 28 September 2026).
+ */
+function scan(dir: string, patterns: string[], ignoreCase = true): string | null {
+  if (!patterns.length) return null;
+  const flags = ignoreCase ? ["-I", "-i", "-n", "-E"] : ["-I", "-n", "-E"];
   const args = patterns.flatMap((p) => ["-e", p]);
-  const head = Bun.spawnSync(["git", "grep", "-I", "-i", "-n", "-E", ...args, "HEAD"], { cwd: dir, stdout: "pipe", stderr: "pipe" });
+  const head = Bun.spawnSync(["git", "grep", ...flags, ...args, "HEAD"], { cwd: dir, stdout: "pipe", stderr: "pipe" });
   if (head.exitCode > 1) throw new Error("HEAD scan failed");
   if (head.exitCode === 0) return new TextDecoder().decode(head.stdout).slice(0, 1500);
   // Local branches and tags only: that is what a push can ship.
@@ -122,7 +129,7 @@ function scan(dir: string, patterns: string[]): string | null {
   if (parseInt(count.out, 10) <= HISTORY_SCAN_MAX_COMMITS) {
     const revs = sh(["git", "rev-list", "--branches", "--tags"], dir);
     if (!revs.ok) throw new Error("rev-list failed");
-    const hist = Bun.spawnSync(["git", "grep", "-I", "-i", "-n", "-E", ...args, ...revs.out.split("\n").filter(Boolean)], {
+    const hist = Bun.spawnSync(["git", "grep", ...flags, ...args, ...revs.out.split("\n").filter(Boolean)], {
       cwd: dir,
       stdout: "pipe",
       stderr: "pipe",
@@ -148,7 +155,7 @@ export function check(input: any): string | null {
     if (visibility(slug) !== "public") return null; // private, internal or unknown
   }
   try {
-    const hits = scan(dir, loadPatterns());
+    const hits = scan(dir, GENERIC_PATTERNS, false) ?? scan(dir, loadPatterns().slice(GENERIC_PATTERNS.length), true);
     if (!hits) return null;
     return `[PublicPushGate] BLOCKED: the destination is PUBLIC and the deny scan hit:\n${hits}\nFix the content (and history if flagged) before pushing. Patterns live in MYOS/USER/SECURITY/PublicScrubPatterns.txt; never quote them into tracked files.\n`;
   } catch (err) {

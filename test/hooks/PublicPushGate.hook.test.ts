@@ -14,9 +14,9 @@ const skipNoGit = gate("PublicPushGate", haveBin("git"), "git not installed");
 // Assembled at runtime so no secret-shaped literal sits in this file.
 const FAKE_KEY = ["AKIA", "ABCDEFGHIJKLMNOP"].join("");
 
-function repo(home: ReturnType<typeof myosHome>, secret: boolean): string {
+function repo(home: ReturnType<typeof myosHome>, secret: boolean | string): string {
   const dir = home.join("Code/site");
-  home.write("Code/site/index.html", secret ? `key = ${FAKE_KEY}\n` : "<h1>hello</h1>\n");
+  home.write("Code/site/index.html", typeof secret === "string" ? secret : secret ? `key = ${FAKE_KEY}\n` : "<h1>hello</h1>\n");
   const git = (...a: string[]) => execFileSync("git", a, { cwd: dir, env: { ...process.env, HOME: home.join("."), GIT_CONFIG_NOSYSTEM: "1" }, stdio: "pipe" });
   git("init", "-q");
   git("-c", "user.email=t@t", "-c", "user.name=t", "add", ".");
@@ -40,6 +40,14 @@ describe.skipIf(skipNoGit)("PublicPushGate", () => {
   test("public repo with clean content: allowed", async () => {
     using home = myosHome("push-public-clean");
     const dir = repo(home, false);
+    using bin = sparsePath({ link: ["git"], stub: { gh: "echo PUBLIC" } });
+    const r = await runHook(HOOK, { home, stdin: push(dir), env: { PATH: bin.path } });
+    expect(r.exitCode).toBe(0);
+  });
+
+  test("lower-case base64 that only looks like a key under -i: allowed", async () => {
+    using home = myosHome("push-public-base64");
+    const dir = repo(home, `<img src="data:image/png;base64,xx${FAKE_KEY.toLowerCase()}yy">\n`);
     using bin = sparsePath({ link: ["git"], stub: { gh: "echo PUBLIC" } });
     const r = await runHook(HOOK, { home, stdin: push(dir), env: { PATH: bin.path } });
     expect(r.exitCode).toBe(0);
